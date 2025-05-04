@@ -1,0 +1,26 @@
+include:
+  - storage/postgres/compose.user-pg.yml
+  - storage/redis/compose.user-redis.yml
+
+services:
+  user:
+    build:
+      context: ./service
+      dockerfile: dockerfile
+    ports:
+      - "8080"
+    networks:
+      - qwik-network
+    depends_on:
+      user-shard0-primary:
+        condition: service_healthy
+      user-shard0-replica0:
+        condition: service_healthy
+      user-shard1-primary:
+        condition: service_healthy
+      user-shard1-replica0:
+        condition: service_healthy
+      user-redis:
+        condition: service_healthy
+    deploy:
+      replicas: 4

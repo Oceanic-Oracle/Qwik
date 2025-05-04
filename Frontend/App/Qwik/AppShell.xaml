@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="Qwik.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Qwik"
+    Shell.FlyoutBehavior="Disabled"
+    Title="Qwik">
+
+    <Shell.Resources>
+        <ResourceDictionary>
+            <Style TargetType="TabBar">
+                <Setter Property="Shell.TabBarBackgroundColor" Value="{StaticResource White}"/>
+                    <Setter Property="Shell.TabBarUnselectedColor" Value="{StaticResource Gray600}"/>
+                <Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource Primary}"/>
+            </Style>
+        </ResourceDictionary>
+    </Shell.Resources>
+
+    <TabBar>
+        <Tab Title="Главная" Icon="home.png">
+            <ShellContent ContentTemplate="{DataTemplate local:MainPage}"/>
+        </Tab>
+
+        <Tab Title="Кошелек" Icon="wallet.png">
+            <ShellContent ContentTemplate="{DataTemplate local:WalletPage}"/>
+        </Tab>
+
+        <Tab Title="Корзина" Icon="basket.png">
+            <ShellContent ContentTemplate="{DataTemplate local:BasketPage}"/>
+        </Tab>
+
+        <Tab Title="Профиль" Icon="profile.png">
+            <ShellContent ContentTemplate="{DataTemplate local:ProfilePage}"/>
+        </Tab>
+    </TabBar>
+
+</Shell>

@@ -1,0 +1,46 @@
+include:
+  - shard0/compose.user-shard-pg0.yml
+  - shard1/compose.user-shard-pg1.yml
+
+services:
+  user-flyway-migrate-shard0:
+    image: flyway/flyway:11.7.0-alpine
+    env_file: .env
+    environment:
+      FLYWAY_URL: jdbc:postgresql://user-shard0-primary:5432/${POSTGRES_DB}
+      FLYWAY_USER: ${POSTGRES_USERNAME}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./migrations:/flyway/sql
+    depends_on:
+      user-shard0-primary:
+        condition: service_healthy
+      user-shard0-replica0:
+        condition: service_healthy
+    networks:
+      - qwik-network
+    command: migrate
+
+  user-flyway-migrate-shard1:
+    image: flyway/flyway:11.7.0-alpine
+    env_file: .env
+    environment:
+      FLYWAY_URL: jdbc:postgresql://user-shard1-primary:5432/${POSTGRES_DB}
+      FLYWAY_USER: ${POSTGRES_USERNAME}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./migrations:/flyway/sql
+    depends_on:
+      user-shard1-primary:
+        condition: service_healthy
+      user-shard1-replica0:
+        condition: service_healthy
+    networks:
+      - qwik-network
+    command: migrate
+
+volumes:
+  user-shard0-primary-data:
+  user-shard0-replica0-data:
+  user-shard1-primary-data:
+  user-shard1-replica0-data:

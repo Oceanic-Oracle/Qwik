@@ -1,0 +1,11 @@
+services:
+  mailer:
+    build:
+      context: ./service
+      dockerfile: dockerfile
+    ports:
+      - "8081"
+    networks:
+      - qwik-network
+    deploy:
+      replicas: 2

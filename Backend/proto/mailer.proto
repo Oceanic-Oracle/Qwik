@@ -1,0 +1,18 @@
+//protoc -I proto --go_out=paths=source_relative:mailer/service/internal/server/grpc-server/gen --go-grpc_out=paths=source_relative:mailer/service/internal/server/grpc-server/gen proto/mailer.proto
+
+syntax = "proto3";
+
+package api;
+
+option go_package = "user/internal/api/gen";
+
+service Sender {
+    rpc SendMail(SendMailReq)       returns(SendMailRes) {}
+}
+
+message SendMailReq {
+    string email = 1;
+    string theme = 2;
+    string usermessage = 3;
+}
+message SendMailRes {}

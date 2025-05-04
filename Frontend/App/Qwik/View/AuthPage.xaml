@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Qwik.AuthPage"
+             Title="Аутентификация">
+
+    <Grid RowDefinitions="*,Auto,Auto,Auto,20,Auto,*"
+          ColumnDefinitions="*,Auto,*"
+          Padding="20">
+
+        <Label Text="Вход"
+               Grid.Row="1" Grid.Column="1"
+               FontSize="28"
+               FontAttributes="Bold"
+               HorizontalOptions="Start"
+               Margin="0,0,0,10"/>
+
+        <Entry Placeholder="Логин" 
+               x:Name="LoginEnter"
+               Grid.Row="2" Grid.Column="1"
+               WidthRequest="300"
+               HeightRequest="50"/>
+
+        <Entry Placeholder="Пароль" 
+               x:Name="PasswordEnter"
+               Grid.Row="3" Grid.Column="1"
+               WidthRequest="300"
+               HeightRequest="50"
+               IsPassword="True"/>
+
+        <Grid Grid.Row="5"
+              Grid.Column="1"
+              ColumnDefinitions="*,Auto,*">
+            
+                <Button Text="Регистрация" 
+                    Grid.Column="0"
+                    WidthRequest="120"
+                    Clicked="RegisterButtonClicked"/>
+
+                <Button Text="Войти" 
+                    Grid.Column="2"
+                    WidthRequest="90"
+                    Clicked="LoginButtonClicked"/>
+        </Grid>
+
+
+    </Grid>
+</ContentPage>

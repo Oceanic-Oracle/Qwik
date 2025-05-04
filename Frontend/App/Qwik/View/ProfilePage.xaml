@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Qwik.ProfilePage">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <Grid ColumnDefinitions="*, Auto" 
+                  HorizontalOptions="Fill"
+                  Margin="10"
+                  BackgroundColor="{AppThemeBinding Light=White, Dark=Gray}"
+                  HeightRequest="50"
+                  x:Name="searchContainer">
+
+                <Entry x:Name="searchEntry"
+                       Grid.Column="0"
+                       Placeholder="Поиск пользователя"
+                       HorizontalOptions="Fill"
+                       VerticalOptions="Center"
+                       Margin="10,0,5,0"
+                       ReturnType="Search"
+                       Completed="OnSearchClicked"/>
+
+                <ImageButton x:Name="searchButton"
+                        Grid.Column="1"
+                        Source="search_static.svg"
+                        BackgroundColor="Transparent"
+                        Scale="0.5"
+                        VerticalOptions="Center"
+                        HorizontalOptions="End"
+                        Clicked="OnSearchClicked"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto, *">
+                <Border Stroke="{StaticResource Gray300}"
+                        Background="{StaticResource Gray300}"
+                        Padding="10"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 10">
+                    <Grid ColumnDefinitions="Auto, *"
+                          RowDefinitions="Auto, *">
+                        <Label Text="Привет,"
+                               FontSize="16"
+                               Grid.Column="0"
+                               Grid.Row="0"/>
+                        <Label Text="Иванов Иван Иванович!"
+                               FontSize="16"
+                               HorizontalOptions="Center"
+                               Grid.Column="0"
+                               Grid.Row="1"/>
+                    </Grid>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OpenProfileClicked"/>
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                <Button Text="Избранное" Grid.Column="0" HeightRequest="40"/>
+                <Button Text="Покупки" Grid.Column="1" HeightRequest="40"/>
+                <Button Text="Отзывы" Grid.Column="2" HeightRequest="40"/>
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
