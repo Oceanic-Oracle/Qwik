@@ -6,7 +6,6 @@ import (
 	pgstorage "auth/internal/storage/postgres"
 	"crypto/sha256"
 	"log/slog"
-	"math/rand/v2"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -22,25 +21,14 @@ type Repo struct {
 }
 
 func NewRepo(connPool *pgstorage.ConnectionPool, log *slog.Logger) *Repo {
-	cr := &сonnectionRouter{
-		writeConn: func(data string) (*pgxpool.Pool, pgstorage.ShardNum) {
-			shardNum := getShardNum(data, len(*connPool))
-
-			return (*connPool)[shardNum].Main, shardNum
-		},
-		readConn: func(data string) (*pgxpool.Pool, pgstorage.ShardNum) {
-			shardNum := getShardNum(data, len(*connPool))
-
-			node := (*connPool)[shardNum].Slave
-			indx := rand.IntN(len(node))
-
-			return node[indx], shardNum
-		},
+	getConn := func(data string) (*pgxpool.Pool, pgstorage.ShardNum) {
+		shardNum := getShardNum(data, len(*connPool))
+		return (*connPool)[shardNum], shardNum
 	}
 
 	return &Repo{
-		User:    auth.NewAuthRepo(cr.writeConn, cr.readConn, log),
-		Profile: profile.NewProfileRepo(cr.writeConn, cr.readConn, log),
+		User:    auth.NewAuthRepo(getConn, log),
+		Profile: profile.NewProfileRepo(getConn, log),
 	}
 }
 

@@ -16,9 +16,11 @@
 Состоит из двух частей:
 
 - Мобильного приложения под Android на C#
-- Сервера на Golang
+- Сервера на Golang и C#
 
-Микросервисную схему можно посмотреть в отдельном файле Mic_schema.jpg
+Микросервисная схема:
+
+![Schema](schema.png)
 
 ## Стек технологий
 
@@ -31,11 +33,14 @@
 ### Backend
 
 - Golang
+- C#
+- .NET
 - Postgres
+- repmgr
+- PgPool II
 - Redis
 - gRPC
 - Nginx
-- FlyWay
 - REST API
 - Docker
 - Swagger
@@ -45,6 +50,8 @@
 Для запуска потребуется прописать эту команду из папки Backend при открытом Docker
 
 ```bash
+docker build -t migrator ./DbNomad/DbNomad
+
 docker compose up --build
 ```
 

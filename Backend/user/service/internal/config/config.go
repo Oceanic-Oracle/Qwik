@@ -27,12 +27,11 @@ type Httpserver struct {
 }
 
 type PgStorage struct {
-	Username   string `env:"POSTGRES_USERNAME"`
-	Password   string `env:"POSTGRES_PASSWORD"`
-	Database   string `env:"POSTGRES_DB"`
-	Port       string `env:"POSTGRES_PORT"`
-	HostShard0 string `env:"POSTGRES_HOST_SHARD0"`
-	HostShard1 string `env:"POSTGRES_HOST_SHARD1"`
+	Username string `env:"POSTGRES_USERNAME"`
+	Password string `env:"POSTGRES_PASSWORD"`
+	Database string `env:"POSTGRES_DB"`
+	Port     string `env:"POSTGRES_PORT"`
+	Hosts    string `env:"POSTGRES_HOST"`
 }
 
 type RedisStorage struct {

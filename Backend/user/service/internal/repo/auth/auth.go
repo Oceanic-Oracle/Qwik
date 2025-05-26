@@ -11,15 +11,14 @@ import (
 )
 
 type auth struct {
-	writeConn func(string) (*pgxpool.Pool, pgstorage.ShardNum)
-	readConn  func(string) (*pgxpool.Pool, pgstorage.ShardNum)
-	log *slog.Logger
+	getConn func(string) (*pgxpool.Pool, pgstorage.ShardNum)
+	log     *slog.Logger
 }
 
 func (u *auth) GetUser(ctx context.Context, login string) (*GetUserRes, error) {
 	q := `SELECT id, password FROM users WHERE login = $1`
 
-	conn, shardNum := u.readConn(login)
+	conn, shardNum := u.getConn(login)
 	u.log.Debug("read from a shard", "num", shardNum)
 
 	res := &GetUserRes{}
@@ -35,15 +34,15 @@ func (u *auth) Create(ctx context.Context, userdto *CreateUserReq) (*CreateUserR
 	q2 := `INSERT INTO users_email (email) VALUES ($1) RETURNING id_users`
 	q3 := `INSERT INTO usersroles (user_id, role_id) VALUES ($1, $2)`
 
-	connLogin, shardNumLogin := u.writeConn(userdto.Login)
-	connEmail, shardNumEmail := u.writeConn(userdto.Email)
+	connLogin, shardNumLogin := u.getConn(userdto.Login)
+	connEmail, shardNumEmail := u.getConn(userdto.Email)
 	u.log.Debug("write to shards", "login shard num", shardNumLogin, "email shard num", shardNumEmail)
 
 	trEmail, err := connEmail.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer trEmail.Rollback(ctx)	
+	defer trEmail.Rollback(ctx)
 
 	var newUserId uuid.UUID
 	if err := trEmail.QueryRow(ctx, q2, userdto.Email).Scan(&newUserId); err != nil {
@@ -68,7 +67,7 @@ func (u *auth) Create(ctx context.Context, userdto *CreateUserReq) (*CreateUserR
 		return nil, err
 	}
 	if err := trLogin.Commit(ctx); err != nil {
-		conn, _ := u.writeConn(userdto.Email)
+		conn, _ := u.getConn(userdto.Email)
 		if _, err := conn.Exec(ctx, `DELETE FROM users_email WHERE id_users = $1`, newUserId); err != nil {
 			return nil, fmt.Errorf("CRIRICAL: user creation completely failed. Manual intervention required. Main: %w, User id: %s", err, newUserId)
 		}
@@ -82,12 +81,10 @@ func (u *auth) Create(ctx context.Context, userdto *CreateUserReq) (*CreateUserR
 	}, nil
 }
 
-func NewAuthRepo(writeConn func(string) (*pgxpool.Pool, pgstorage.ShardNum),
-	readConn func(string) (*pgxpool.Pool, pgstorage.ShardNum),
+func NewAuthRepo(getConn func(string) (*pgxpool.Pool, pgstorage.ShardNum),
 	log *slog.Logger) AuthInterface {
 	return &auth{
-		writeConn: writeConn,
-		readConn:  readConn,
-		log: log,
+		getConn: getConn,
+		log:     log,
 	}
 }

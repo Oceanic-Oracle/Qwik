@@ -9,18 +9,12 @@ services:
       dockerfile: dockerfile
     ports:
       - "8080"
+    depends_on:
+      user-pgpool-shard-0:
+        condition: service_healthy
+      user-pgpool-shard-1:
+        condition: service_healthy
     networks:
       - qwik-network
-    depends_on:
-      user-shard0-primary:
-        condition: service_healthy
-      user-shard0-replica0:
-        condition: service_healthy
-      user-shard1-primary:
-        condition: service_healthy
-      user-shard1-replica0:
-        condition: service_healthy
-      user-redis:
-        condition: service_healthy
     deploy:
       replicas: 4

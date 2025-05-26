@@ -1,0 +1,13 @@
+services:
+  migrate-user:
+    image: migrator
+    environment:
+      - TYPE_DB=postgres
+      - URLS=postgresql://postgres:hvou4nuj4YVYmKuwDWIrO8wVzgfvtU6b@user-pgpool-shard-0:5432/user?sslmode=disable,postgresql://postgres:hvou4nuj4YVYmKuwDWIrO8wVzgfvtU6b@user-pgpool-shard-1:5432/user?sslmode=disable
+    networks:
+      - user-storage-network
+    volumes:
+      - ./sql/deploy:/app/sql
+    depends_on:
+      user-pgpool-shard-1:
+        condition: service_healthy
