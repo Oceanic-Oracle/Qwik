@@ -1,5 +1,9 @@
 # Qwik
 
+<div>
+  <img src="images/logo.png" alt="Logo" style="max-width: 20%; height: auto;">
+</div>
+
 ## Оглавление
 - [Qwik](#qwik)
   - [Оглавление](#оглавление)
@@ -12,7 +16,7 @@
 
 ## Общее описание
 
-Проект представляет собой агрегатор наподобии Amazon/Ozon/Wildberries.
+Проект представляет собой агрегатор на подобии Amazon/Ozon/Wildberries.
 Состоит из двух частей:
 
 - Мобильного приложения под Android на C#
@@ -20,7 +24,7 @@
 
 Микросервисная схема:
 
-![Schema](schema.png)
+![Schema](images/schema.png)
 
 ## Стек технологий
 
