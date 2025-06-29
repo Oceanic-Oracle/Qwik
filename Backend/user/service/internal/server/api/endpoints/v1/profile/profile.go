@@ -10,8 +10,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
-
-	//"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -33,7 +31,7 @@ func GetProfile(pgRepo *repo.Repo, cfg *config.Jwt, log *slog.Logger) http.Handl
 		}
 
 		tokenString := strings.TrimSpace(authHeader)
-		if strings.HasPrefix(strings.ToLower(tokenString), "bearer ") {
+		if strings.HasPrefix(tokenString, "Bearer ") {
 			tokenString = strings.TrimSpace(tokenString[7:])
 		}
 
@@ -59,6 +57,7 @@ func GetProfile(pgRepo *repo.Repo, cfg *config.Jwt, log *slog.Logger) http.Handl
 			}
 			return
 		}
+		log.Debug("Token", "", parseToken)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -69,10 +68,11 @@ func GetProfile(pgRepo *repo.Repo, cfg *config.Jwt, log *slog.Logger) http.Handl
 			return
 		}
 
+		
 		response := &GetProfileRes{
-			Surname:    pgRes.Surname,
-			Name:       pgRes.Name,
-			Patronymic: pgRes.Patronymic,
+			Surname:    pgRes.Surname.String,
+			Name:       pgRes.Name.String,
+			Patronymic: pgRes.Patronymic.String,
 			CreatedAt:  pgRes.CreatedAt,
 		}
 

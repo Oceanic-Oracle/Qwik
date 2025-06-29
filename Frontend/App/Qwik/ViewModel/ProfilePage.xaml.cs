@@ -1,14 +1,16 @@
+using Qwik.Model;
+using Qwik.Model.Dto;
+
 namespace Qwik;
 
 public partial class ProfilePage : ContentPage
 {
     string Login = string.Empty;
     string Email = string.Empty;
+    string CreatedAt = string.Empty;
     public ProfilePage()
 	{
 		InitializeComponent();
-        Login = "sdvsb";
-        Email = "sdbsdb";
     }
 
     protected override async void OnAppearing()
@@ -17,6 +19,23 @@ public partial class ProfilePage : ContentPage
         {
             await Shell.Current.Navigation.PushAsync(new AuthPage());
             return;
+        } else
+        {
+            try
+            {
+                var header = new Dictionary<string, string>();
+                header.Add("Authorization", $"Bearer {Config.JWT}");
+
+                var body = await Api.SendGetRequest<GetProfileRes>(header, Api.MyProfileEndpoint);
+                CreatedAt = body.CreatedAt;
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Ошибка", $"{ex.Message}", "OK");
+
+                Config.JWT = ex.Message;
+                await Shell.Current.Navigation.PushAsync(new AuthPage());
+            }
         }
     }
 
@@ -27,12 +46,13 @@ public partial class ProfilePage : ContentPage
 
     private async void OpenProfileClicked(object sender, EventArgs e)
     {
-        string action = await DisplayActionSheet(
-        $"Логин: {Login}{Environment.NewLine}Почта: {Email}",
-        "Отмена", 
-        "Выйти");
+        bool action = await DisplayAlert(
+            "Профиль",
+            $"Логин: {Login}\nПочта: {Email}\nДата регистрации: {CreatedAt}",
+            "Выйти",
+            "Отмена");
 
-        if (action == "Выйти")
+        if (action)
         {
             Config.JWT = "";
             await Shell.Current.Navigation.PushAsync(new AuthPage());

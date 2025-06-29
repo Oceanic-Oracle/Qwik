@@ -10,9 +10,12 @@ import (
 )
 
 type UserJwt struct {
-	Id       string
-	Login    string
-	Password string
+	Id         string
+	Login      string
+	Password   string
+	Surname    string
+	Name       string
+	Patronymic string
 
 	jwt.RegisteredClaims
 }

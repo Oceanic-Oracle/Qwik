@@ -1,32 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Qwik.Model.Dto
 {
     public record class VerifyReq
     {
-        public string email { get; set; } = string.Empty;
+        [JsonPropertyName("email")]
+        public string Email { get; set; } = string.Empty;
     }
 
     public record class VerifyRes
     {
-        public string sessioncode { get; set; } = string.Empty;
+        [JsonPropertyName("sessioncode")]
+        public string Sessioncode { get; set; } = string.Empty;
     }
 
     public record class ConfirmRegReq
     {
-        public string sessionCode { get; set; } = string.Empty;
-        public string email { get; set; } = string.Empty;
-        public string login { get; set; } = string.Empty;
-        public string password { get; set; } = string.Empty;
-        public string verifyCode { get; set; } = string.Empty;
+        [JsonPropertyName("sessioncode")]
+        public string SessionCode { get; set; } = string.Empty;
+
+        [JsonPropertyName("email")]
+        public string Email { get; set; } = string.Empty;
+
+        [JsonPropertyName("login")]
+        public string Login { get; set; } = string.Empty;
+
+        [JsonPropertyName("password")]
+        public string Password { get; set; } = string.Empty;
+
+        [JsonPropertyName("verifycode")]
+        public string VerifyCode { get; set; } = string.Empty;
     }
 
     public record class ConfirmRegRes
     {
-        public string id { get; set; } = string.Empty;
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = string.Empty;
     }
 }

@@ -48,7 +48,7 @@ func (s *Server) CreateServer() {
 			r.Post("/registration", auth.Registration(s.redisStorage, s.pgRepo, s.log))
 		})
 		r.Route("/profile", func(r chi.Router) {
-			r.Get("/", profile.GetProfile(s.pgRepo, &s.cfg.Jwt, s.log))
+			r.Get("/me", profile.GetProfile(s.pgRepo, &s.cfg.Jwt, s.log))
 		})
 	})
 

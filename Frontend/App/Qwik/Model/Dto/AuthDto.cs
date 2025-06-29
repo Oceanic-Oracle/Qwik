@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Qwik.Model.Dto
 {
     public record AuthenticationReq
     {
-        public string login { get; init; } = string.Empty;
-        public string password { get; init; } = string.Empty;
+        [JsonPropertyName("login")]
+        public string Login { get; init; } = string.Empty;
+
+        [JsonPropertyName("password")]
+        public string Password { get; init; } = string.Empty;
     }
 
     public record AuthenticationRes
     {
-        public string jwt { get; init; } = string.Empty;
+        [JsonPropertyName("jwt")]
+        public string Jwt { get; init; } = string.Empty;
     }
 }

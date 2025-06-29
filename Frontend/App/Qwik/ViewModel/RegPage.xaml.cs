@@ -32,11 +32,11 @@ public partial class RegPage : ContentPage
                 return;
             }
 
-            VerifyReq req = new VerifyReq { email = EmailReg.Text };
+            VerifyReq req = new VerifyReq { Email = EmailReg.Text };
 
             VerifyRes res = await Api.SendPostRequest<VerifyReq, VerifyRes>(req, Api.VerifyCodeEndpoint);
 
-            await Shell.Current.Navigation.PushAsync(new VerifyEmailPage(login, email, password, res.sessioncode));
+            await Shell.Current.Navigation.PushAsync(new VerifyEmailPage(login, email, password, res.Sessioncode));
         }
         catch (Exception ex) 
         {

@@ -14,9 +14,9 @@ public partial class AuthPage : ContentPage
     {
         try
         {
-            AuthenticationReq req = new AuthenticationReq { login = LoginEnter.Text, password = PasswordEnter.Text };
+            AuthenticationReq req = new AuthenticationReq { Login = LoginEnter.Text, Password = PasswordEnter.Text };
 
-            if (string.IsNullOrEmpty(req.login) || string.IsNullOrEmpty(req.password))
+            if (string.IsNullOrEmpty(req.Login) || string.IsNullOrEmpty(req.Password))
             {
                 await DisplayAlert("Ошибка", "Заполните все поля", "OK");
                 return;
@@ -26,7 +26,7 @@ public partial class AuthPage : ContentPage
 
             System.Diagnostics.Debug.WriteLine(body);
 
-            Config.JWT = body.jwt;
+            Config.JWT = body.Jwt;
 
             await Shell.Current.Navigation.PopAsync();
         }

@@ -33,16 +33,16 @@ public partial class VerifyEmailPage : ContentPage
 
             ConfirmRegReq req = new ConfirmRegReq
             {
-                sessionCode = SessionCode,
-                login = Login,
-                password = Password,
-                email = Email,
-                verifyCode = verifyCode
+                SessionCode = SessionCode,
+                Login = Login,
+                Password = Password,
+                Email = Email,
+                VerifyCode = verifyCode
             };
 
             ConfirmRegRes res = await Api.SendPostRequest<ConfirmRegReq, ConfirmRegRes>(req, Api.ConfirmRegEndpoint);
 
-            if (string.IsNullOrEmpty(res.id))
+            if (string.IsNullOrEmpty(res.Id))
             {
                 await DisplayAlert("Ошибка", "Неизветная ошибка", "ОК");
                 return;

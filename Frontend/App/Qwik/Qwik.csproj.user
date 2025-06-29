@@ -3,9 +3,9 @@
   <PropertyGroup>
     <IsFirstTimeProjectOpen>False</IsFirstTimeProjectOpen>
     <ActiveDebugFramework>net9.0-android</ActiveDebugFramework>
-    <ActiveDebugProfile>Pixel 7 - API 35 (Android 15.0 - API 35)</ActiveDebugProfile>
+    <ActiveDebugProfile>Galaxy Nexus - API 34 (Android 14.0 - API 34)</ActiveDebugProfile>
     <SelectedPlatformGroup>Emulator</SelectedPlatformGroup>
-    <DefaultDevice>pixel_7_-_api_35</DefaultDevice>
+    <DefaultDevice>galaxy_nexus_-_api_34</DefaultDevice>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
     <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
