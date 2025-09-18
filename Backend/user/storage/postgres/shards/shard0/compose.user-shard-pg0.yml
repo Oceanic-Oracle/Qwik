@@ -1,6 +1,6 @@
 services:
   user-shard-0-node-1:
-    image: bitnami/postgresql-repmgr:14
+    image: bitnamilegacy/postgresql-repmgr:latest
     ports:
       - "5432"
     env_file:
@@ -22,7 +22,7 @@ services:
       - user-storage-network
 
   user-shard-0-node-2:
-    image: bitnami/postgresql-repmgr:14
+    image: bitnamilegacy/postgresql-repmgr:latest
     ports:
       - "5432"
     env_file:
@@ -44,7 +44,7 @@ services:
       - user-storage-network
   
   user-shard-0-node-3:
-    image: bitnami/postgresql-repmgr:14
+    image: bitnamilegacy/postgresql-repmgr:latest
     ports:
       - "5432"
     env_file:

@@ -24,11 +24,11 @@ namespace DbNomad.Utils
 
         static public string[] ReadDirectory(string path) 
         {
-            if (Directory.Exists("sql"))
+            if (Directory.Exists(path))
             {
-                string[] AllFiles = Directory.GetFiles("sql")
+                string[] AllFiles = Directory.GetFiles(path)
                     .Select(Path.GetFileName)
-                    .Where(fileName => fileName != null)
+                    .Where(fileName => fileName != null && fileName != "ignore.txt")
                     .Select(fileName => fileName!)
                     .OrderBy(fileName => fileName)
                     .ToArray();
@@ -36,7 +36,7 @@ namespace DbNomad.Utils
             }
             else
             {
-                throw new Exception("Отсутствует директория");
+                throw new DirectoryNotFoundException("Отсутствует директория");
             }
         }
     }
