@@ -1,0 +1,26 @@
+services:
+  user-haproxy:
+    image: haproxytech/haproxy-alpine:2.8
+    ports:
+      - "5000"
+      - "5001"
+      - "5002"
+      - "5003"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    depends_on:
+      - user-shard1-1
+      - user-shard1-2
+      - user-shard1-3
+      - user-shard2-1
+      - user-shard2-2
+      - user-shard2-3
+    networks:
+      - qwik-network
+      - user-storage-network
+    deploy:
+      replicas: 2
+
+networks:
+  user-storage-network:
+    driver: bridge

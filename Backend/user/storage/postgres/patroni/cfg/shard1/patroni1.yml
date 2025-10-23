@@ -1,0 +1,51 @@
+scope: shard1
+namespace: /service/
+name: user-shard1-1
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: user-shard1-1:8008
+
+zookeeper:
+  hosts:
+    - user-zookeeper-1
+    - user-zookeeper-2
+    - user-zookeeper-3
+  port: 2181
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      pg_hba:
+        - host replication replicator 0.0.0.0/0 md5
+        - host all all 0.0.0.0/0 md5
+      parameters:
+        wal_level: replica
+        hot_standby: "on"
+        max_wal_senders: 10
+        wal_keep_segments: 8
+        max_replication_slots: 10
+        listen_addresses: '*'
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: user-shard1-1:5432
+  data_dir: /var/lib/postgresql/data/pgdata
+  bin_dir: /usr/lib/postgresql/15/bin
+  authentication:
+    replication:
+      username: replicator
+      password: rep-pass
+    superuser:
+      username: postgres
+      password: postgres
+  parameters:
+    shared_preload_libraries: 'pg_stat_statements'

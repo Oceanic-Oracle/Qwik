@@ -1,5 +1,10 @@
 include:
-  - storage/postgres/compose.user-pg.yml
+  - storage/postgres/haproxy/compose.user-haproxy.yml
+  - storage/postgres/migrations/compose.migrations.yml
+  - storage/postgres/patroni/shard1/compose.user-patroni.yml
+  - storage/postgres/patroni/shard2/compose.user-patroni.yml
+  - storage/postgres/zookeeper/compose.user-zookeeper.yml
+
   - storage/redis/compose.user-redis.yml
 
 services:
@@ -10,10 +15,7 @@ services:
     ports:
       - "8080"
     depends_on:
-      user-pgpool-shard-0:
-        condition: service_healthy
-      user-pgpool-shard-1:
-        condition: service_healthy
+      - user-haproxy
     networks:
       - qwik-network
     deploy:

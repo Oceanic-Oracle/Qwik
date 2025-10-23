@@ -40,8 +40,9 @@
 - C#
 - .NET
 - Postgres
-- repmgr
-- PgPool II
+- zookeeper
+- patroni
+- Haproxy
 - Redis
 - gRPC
 - Nginx

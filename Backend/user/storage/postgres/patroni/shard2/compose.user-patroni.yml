@@ -1,0 +1,45 @@
+services:
+  user-shard2-1:
+    build: ../cfg
+    environment:
+      PATRONI_NAME: user-shard2-1
+      PATRONI_NAMESPACE: /service/shard2
+      PATRONI_SCOPE: shard2
+    volumes:
+      - ../cfg/shard2/patroni1.yml:/etc/patroni.yml
+    depends_on:
+      - user-zookeeper-1
+      - user-zookeeper-2
+      - user-zookeeper-3
+    networks:
+      - user-storage-network
+
+  user-shard2-2:
+    build: ../cfg
+    environment:
+      PATRONI_NAME: user-shard2-2
+      PATRONI_NAMESPACE: /service/shard2
+      PATRONI_SCOPE: shard2
+    volumes:
+      - ../cfg/shard2/patroni2.yml:/etc/patroni.yml
+    depends_on:
+      - user-zookeeper-1
+      - user-zookeeper-2
+      - user-zookeeper-3
+    networks:
+      - user-storage-network
+
+  user-shard2-3:
+    build: ../cfg
+    environment:
+      PATRONI_NAME: user-shard2-3
+      PATRONI_NAMESPACE: /service/shard2
+      PATRONI_SCOPE: shard2
+    volumes:
+      - ../cfg/shard2/patroni3.yml:/etc/patroni.yml
+    depends_on:
+      - user-zookeeper-1
+      - user-zookeeper-2
+      - user-zookeeper-3
+    networks:
+      - user-storage-network
