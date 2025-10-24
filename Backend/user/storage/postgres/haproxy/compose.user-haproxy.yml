@@ -18,6 +18,12 @@ services:
     networks:
       - qwik-network
       - user-storage-network
+    healthcheck:
+      test: ["CMD", "pidof", "haproxy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     deploy:
       replicas: 2
 

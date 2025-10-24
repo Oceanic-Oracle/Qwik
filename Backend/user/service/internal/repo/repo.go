@@ -3,39 +3,45 @@ package repo
 import (
 	"auth/internal/repo/auth"
 	"auth/internal/repo/profile"
-	pgstorage "auth/internal/storage/postgres"
+	"auth/pkg"
 	"crypto/sha256"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type сonnectionRouter struct {
-	writeConn func(string) (*pgxpool.Pool, pgstorage.ShardNum)
-	readConn  func(string) (*pgxpool.Pool, pgstorage.ShardNum)
-}
-
 type Repo struct {
 	User    auth.AuthInterface
 	Profile profile.ProfileInterface
 }
 
-func NewRepo(connPool *pgstorage.ConnectionPool, log *slog.Logger) *Repo {
-	getConn := func(data string) (*pgxpool.Pool, pgstorage.ShardNum) {
-		shardNum := getShardNum(data, len(*connPool))
-		return (*connPool)[shardNum], shardNum
+func NewRepo(connPool *pkg.ConnectionPool, log *slog.Logger) *Repo {
+	writeConn := func(s string) (*pgxpool.Pool, pkg.ShardNum) {
+		num := getShardNum(s, len(*connPool))
+		return (*connPool)[num].WriteNode, num
+	}
+	readConn := func(s string) (*pgxpool.Pool, pkg.ShardNum) {
+		num := getShardNum(s, len(*connPool))
+		return (*connPool)[num].ReadNode, num
+	}
+	AllReadConn := func() []*pgxpool.Pool {
+		conns := make([]*pgxpool.Pool, 0, len(*connPool))
+		for _, val := range *connPool {
+			conns = append(conns, val.ReadNode)
+		}
+		return conns
 	}
 
 	return &Repo{
-		User:    auth.NewAuthRepo(getConn, log),
-		Profile: profile.NewProfileRepo(getConn, log),
+		User:    auth.NewAuthRepo(writeConn, readConn, AllReadConn, log),
+		Profile: profile.NewProfileRepo(writeConn, readConn, AllReadConn, log),
 	}
 }
 
-func getShardNum(data string, num int) pgstorage.ShardNum {
+func getShardNum(data string, num int) pkg.ShardNum {
 	hash := sha256.Sum256([]byte(data))
 
 	hashUint := uint8(hash[0])
 
-	return pgstorage.ShardNum(hashUint % uint8(num))
+	return pkg.ShardNum(hashUint % uint8(num))
 }

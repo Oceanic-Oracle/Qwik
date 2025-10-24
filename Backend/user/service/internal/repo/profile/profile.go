@@ -1,7 +1,7 @@
 package profile
 
 import (
-	pgstorage "auth/internal/storage/postgres"
+	"auth/pkg"
 	"context"
 	"log/slog"
 	"time"
@@ -10,14 +10,17 @@ import (
 )
 
 type profile struct {
-	getConn func(string) (*pgxpool.Pool, pgstorage.ShardNum)
-	log     *slog.Logger
+	writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum)
+	readConn func(s string) (*pgxpool.Pool, pkg.ShardNum)
+	allReadConn func() []*pgxpool.Pool
+
+	log       *slog.Logger
 }
 
 func (p *profile) GetProfile(ctx context.Context, login string) (*GetProfileRes, error) {
 	q := `SELECT surname, name, patronymic, created_at FROM users WHERE login = $1`
 
-	conn, shardNum := p.getConn(login)
+	conn, shardNum := p.readConn(login)
 	p.log.Debug("read from a shard", "num", shardNum)
 
 	res := &GetProfileRes{}
@@ -30,10 +33,14 @@ func (p *profile) GetProfile(ctx context.Context, login string) (*GetProfileRes,
 	return res, nil
 }
 
-func NewProfileRepo(getConn func(string) (*pgxpool.Pool, pgstorage.ShardNum),
+func NewProfileRepo(writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
+	readConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
+	allReadConn func() []*pgxpool.Pool,
 	log *slog.Logger) ProfileInterface {
 	return &profile{
-		getConn: getConn,
+		writeConn: writeConn,
+		readConn: readConn,
+		allReadConn: allReadConn,
 		log:     log,
 	}
 }

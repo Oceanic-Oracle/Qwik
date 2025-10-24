@@ -15,7 +15,8 @@ services:
     ports:
       - "8080"
     depends_on:
-      - user-haproxy
+      user-haproxy:
+        condition: service_healthy
     networks:
       - qwik-network
     deploy:

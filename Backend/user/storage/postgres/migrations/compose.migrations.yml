@@ -9,4 +9,5 @@ services:
     volumes:
       - ./sql/deploy:/app/sql
     depends_on:
-      - user-haproxy
+      user-haproxy:
+        condition: service_healthy

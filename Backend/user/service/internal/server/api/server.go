@@ -9,8 +9,7 @@ import (
 	"auth/internal/server/api/endpoints/v1/auth"
 	"auth/internal/server/api/endpoints/v1/profile"
 	"auth/internal/server/middleware"
-	pgstorage "auth/internal/storage/postgres"
-	redisstorage "auth/internal/storage/redis"
+	"auth/pkg"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -82,8 +81,8 @@ func NewRestApi(cfg *config.Config, log *slog.Logger) server.Server {
 		cfg: cfg,
 		log: log,
 
-		redisStorage: redisstorage.GetConnectionPool(cfg.RedisStorage, log),
-		pgRepo:       repo.NewRepo(pgstorage.GetConnectionPool(cfg.PgStorage, "disable", log), log),
+		redisStorage: pkg.GetRedisConnectionPool(cfg.RedisStorage, log),
+		pgRepo:       repo.NewRepo(pkg.GetPgConnectionPool(cfg.PgStorage, "disable", log), log),
 		mailerClient: func() *mailer.SenderClient {
 			res, err := mailer.NewSenderClient(cfg.MailerGrpcClient)
 			if err != nil {

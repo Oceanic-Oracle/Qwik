@@ -27,11 +27,8 @@ type Httpserver struct {
 }
 
 type PgStorage struct {
-	Username string `env:"POSTGRES_USERNAME"`
-	Password string `env:"POSTGRES_PASSWORD"`
-	Database string `env:"POSTGRES_DB"`
-	Port     string `env:"POSTGRES_PORT"`
-	Hosts    string `env:"POSTGRES_HOST"`
+	PostgresUrlsWrite string `env:"POSTGRES_URLS_WRITE"`
+	PostgresUrlsRead  string `env:"POSTGRES_URLS_READ"`
 }
 
 type RedisStorage struct {

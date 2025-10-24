@@ -1,7 +1,7 @@
 package auth
 
 import (
-	pgstorage "auth/internal/storage/postgres"
+	"auth/pkg"
 	"context"
 	"fmt"
 	"log/slog"
@@ -11,14 +11,17 @@ import (
 )
 
 type auth struct {
-	getConn func(string) (*pgxpool.Pool, pgstorage.ShardNum)
+	writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum)
+	readConn func(s string) (*pgxpool.Pool, pkg.ShardNum)
+	allReadConn func() []*pgxpool.Pool
+
 	log     *slog.Logger
 }
 
 func (u *auth) GetUser(ctx context.Context, login string) (*GetUserRes, error) {
 	q := `SELECT id, password FROM users WHERE login = $1`
 
-	conn, shardNum := u.getConn(login)
+	conn, shardNum := u.readConn(login)
 	u.log.Debug("read from a shard", "num", shardNum)
 
 	res := &GetUserRes{}
@@ -34,8 +37,8 @@ func (u *auth) Create(ctx context.Context, userdto *CreateUserReq) (*CreateUserR
 	q2 := `INSERT INTO users_email (email) VALUES ($1) RETURNING id_users`
 	q3 := `INSERT INTO usersroles (user_id, role_id) VALUES ($1, $2)`
 
-	connLogin, shardNumLogin := u.getConn(userdto.Login)
-	connEmail, shardNumEmail := u.getConn(userdto.Email)
+	connLogin, shardNumLogin := u.writeConn(userdto.Login)
+	connEmail, shardNumEmail := u.writeConn(userdto.Email)
 	u.log.Debug("write to shards", "login shard num", shardNumLogin, "email shard num", shardNumEmail)
 
 	trEmail, err := connEmail.Begin(ctx)
@@ -67,7 +70,7 @@ func (u *auth) Create(ctx context.Context, userdto *CreateUserReq) (*CreateUserR
 		return nil, err
 	}
 	if err := trLogin.Commit(ctx); err != nil {
-		conn, _ := u.getConn(userdto.Email)
+		conn, _ := u.writeConn(userdto.Email)
 		if _, err := conn.Exec(ctx, `DELETE FROM users_email WHERE id_users = $1`, newUserId); err != nil {
 			return nil, fmt.Errorf("CRIRICAL: user creation completely failed. Manual intervention required. Main: %w, User id: %s", err, newUserId)
 		}
@@ -81,10 +84,14 @@ func (u *auth) Create(ctx context.Context, userdto *CreateUserReq) (*CreateUserR
 	}, nil
 }
 
-func NewAuthRepo(getConn func(string) (*pgxpool.Pool, pgstorage.ShardNum),
+func NewAuthRepo(writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
+	readConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
+	allReadConn func() []*pgxpool.Pool,
 	log *slog.Logger) AuthInterface {
 	return &auth{
-		getConn: getConn,
+		writeConn: writeConn,
+		readConn: readConn,
+		allReadConn: allReadConn,
 		log:     log,
 	}
 }

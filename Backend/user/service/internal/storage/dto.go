@@ -1,4 +1,4 @@
-package redisstorage
+package storage
 
 type (
 	// Key is "verifycode:<session code>"

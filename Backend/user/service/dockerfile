@@ -9,6 +9,7 @@ RUN go mod download
 
 COPY internal ./internal
 COPY cmd/user ./cmd/user
+COPY pkg ./pkg
 
 RUN go build -o /app/bin ./cmd/user/app.go
 

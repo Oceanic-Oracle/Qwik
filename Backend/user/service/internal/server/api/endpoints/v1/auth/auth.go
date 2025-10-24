@@ -5,7 +5,7 @@ import (
 	"auth/internal/grpc-client/mailer"
 	"auth/internal/repo"
 	"auth/internal/repo/auth"
-	redisstorage "auth/internal/storage/redis"
+	"auth/internal/storage"
 	"auth/internal/utils"
 	"context"
 	"encoding/json"
@@ -42,7 +42,7 @@ func VerificationCode(redis *redis.Client, mailer *mailer.SenderClient, log *slo
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		
-		data, err := json.Marshal(redisstorage.VeriFyCode{
+		data, err := json.Marshal(storage.VeriFyCode{
 			Email: body.Email,
 			VerifyCode: code,
 		})
@@ -145,7 +145,7 @@ func Registration(redis *redis.Client, pgRepo *repo.Repo, log *slog.Logger) http
 			return
 		}
 
-		var redisBody redisstorage.VeriFyCode
+		var redisBody storage.VeriFyCode
 		if err := json.Unmarshal(redisJson, &redisBody); err != nil {
 			log.Warn("failed to unmarshal json from redis", "error", err)
 			http.Error(w, "failed to get verify code", http.StatusInternalServerError)

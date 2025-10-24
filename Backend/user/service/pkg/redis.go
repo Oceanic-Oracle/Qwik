@@ -1,4 +1,4 @@
-package redisstorage
+package pkg
 
 import (
 	"auth/internal/config"
@@ -10,7 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func GetConnectionPool(cfg config.RedisStorage, log *slog.Logger) *redis.Client {
+func GetRedisConnectionPool(cfg config.RedisStorage, log *slog.Logger) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         cfg.Host + cfg.Port,
 		Password:     cfg.Password,
