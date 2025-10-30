@@ -9,4 +9,4 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     networks:
       - qwik-network
-      - user-storage-network
+      - storage-network

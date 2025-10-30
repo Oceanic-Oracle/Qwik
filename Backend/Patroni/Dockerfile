@@ -1,4 +1,4 @@
-FROM postgres:15
+FROM postgis/postgis:15-3.4
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=UTC

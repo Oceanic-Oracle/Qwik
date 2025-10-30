@@ -1,5 +1,5 @@
 services:
-  user-haproxy:
+  warehouse-haproxy:
     image: haproxytech/haproxy-alpine:2.8
     ports:
       - "5000"
@@ -9,12 +9,12 @@ services:
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
     depends_on:
-      - user-shard1-1
-      - user-shard1-2
-      - user-shard1-3
-      - user-shard2-1
-      - user-shard2-2
-      - user-shard2-3
+      - warehouse-shard1-1
+      - warehouse-shard1-2
+      - warehouse-shard1-3
+      - warehouse-shard2-1
+      - warehouse-shard2-2
+      - warehouse-shard2-3
     networks:
       - qwik-network
       - storage-network
@@ -26,7 +26,3 @@ services:
       start_period: 10s
     deploy:
       replicas: 2
-
-networks:
-  storage-network:
-    driver: bridge

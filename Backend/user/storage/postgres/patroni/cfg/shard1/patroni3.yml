@@ -1,5 +1,5 @@
-scope: shard1
-namespace: /service/
+scope: user-shard1
+namespace: /service/user/
 name: user-shard1-3
 
 restapi:
@@ -8,9 +8,9 @@ restapi:
 
 zookeeper:
   hosts:
-    - user-zookeeper-1
-    - user-zookeeper-2
-    - user-zookeeper-3
+    - zookeeper-1
+    - zookeeper-2
+    - zookeeper-3
   port: 2181
 
 bootstrap:

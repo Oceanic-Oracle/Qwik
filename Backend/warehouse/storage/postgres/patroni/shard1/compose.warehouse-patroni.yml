@@ -1,12 +1,12 @@
 services:
-  user-shard2-1:
+  warehouse-shard1-1:
     image: patroni
     environment:
-      PATRONI_NAME: user-shard2-1
+      PATRONI_NAME: warehouse-shard1-1
       PATRONI_NAMESPACE: /service
-      PATRONI_SCOPE: user-shard2
+      PATRONI_SCOPE: warehouse-shard1
     volumes:
-      - ../cfg/shard2/patroni1.yml:/etc/patroni.yml
+      - ../cfg/shard1/patroni1.yml:/etc/patroni.yml
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -14,14 +14,14 @@ services:
     networks:
       - storage-network
 
-  user-shard2-2:
+  warehouse-shard1-2:
     image: patroni
     environment:
-      PATRONI_NAME: user-shard2-2
+      PATRONI_NAME: warehouse-shard1-2
       PATRONI_NAMESPACE: /service
-      PATRONI_SCOPE: user-shard2
+      PATRONI_SCOPE: warehouse-shard1
     volumes:
-      - ../cfg/shard2/patroni2.yml:/etc/patroni.yml
+      - ../cfg/shard1/patroni2.yml:/etc/patroni.yml
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -29,14 +29,14 @@ services:
     networks:
       - storage-network
 
-  user-shard2-3:
+  warehouse-shard1-3:
     image: patroni
     environment:
-      PATRONI_NAME: user-shard2-3
+      PATRONI_NAME: warehouse-shard1-3
       PATRONI_NAMESPACE: /service
-      PATRONI_SCOPE: user-shard2
+      PATRONI_SCOPE: warehouse-shard1
     volumes:
-      - ../cfg/shard2/patroni3.yml:/etc/patroni.yml
+      - ../cfg/shard1/patroni3.yml:/etc/patroni.yml
     depends_on:
       - zookeeper-1
       - zookeeper-2

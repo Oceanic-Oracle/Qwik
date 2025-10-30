@@ -1,10 +1,10 @@
-scope: user-shard1
-namespace: /service/user/
-name: user-shard1-1
+scope: warehouse-shard1
+namespace: /service/warehouse/
+name: warehouse-shard1-1
 
 restapi:
   listen: 0.0.0.0:8008
-  connect_address: user-shard1-1:8008
+  connect_address: warehouse-shard1-1:8008
 
 zookeeper:
   hosts:
@@ -37,7 +37,7 @@ bootstrap:
 
 postgresql:
   listen: 0.0.0.0:5432
-  connect_address: user-shard1-1:5432
+  connect_address: warehouse-shard1-1:5432
   data_dir: /var/lib/postgresql/data/pgdata
   bin_dir: /usr/lib/postgresql/15/bin
   authentication:

@@ -1,0 +1,13 @@
+services:
+  migrate-warehouse:
+    image: migrator
+    environment:
+      - TYPE_DB=postgres
+      - URLS=postgresql://postgres:postgres@warehouse-haproxy:5000/postgres?sslmode=disable,postgresql://postgres:postgres@warehouse-haproxy:5002/postgres?sslmode=disable
+    networks:
+      - storage-network
+    volumes:
+      - ./sql/deploy:/app/sql
+    depends_on:
+      warehouse-haproxy:
+        condition: service_healthy

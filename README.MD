@@ -56,6 +56,7 @@
 
 ```bash
 docker build -t migrator ./DbNomad/DbNomad
+docker build -t patroni ./Patroni
 
 docker compose up --build
 ```
