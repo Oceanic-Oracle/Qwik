@@ -55,8 +55,8 @@
 Для запуска потребуется прописать эту команду из папки Backend при открытом Docker
 
 ```bash
-docker build -t migrator ./DbNomad/DbNomad
-docker build -t patroni ./Patroni
+docker build -t migrator ./infra/DbNomad/DbNomad
+docker build -t patroni ./infra/Patroni
 
 docker compose up --build
 ```
