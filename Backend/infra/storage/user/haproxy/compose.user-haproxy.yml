@@ -26,7 +26,3 @@ services:
       start_period: 10s
     deploy:
       replicas: 2
-
-networks:
-  storage-network:
-    driver: bridge

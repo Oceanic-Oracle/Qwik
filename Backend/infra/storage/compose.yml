@@ -1,0 +1,15 @@
+include:
+  - user/haproxy/compose.user-haproxy.yml
+  - user/migrations/compose.migrations.yml
+  - user/patroni/shard1/compose.user-patroni.yml
+  - user/patroni/shard2/compose.user-patroni.yml
+  
+  - warehouse/haproxy/compose.warehouse-haproxy.yml
+  - warehouse/migrations/compose.migrations.yml
+  - warehouse/patroni/shard1/compose.warehouse-patroni.yml
+  - warehouse/patroni/shard2/compose.warehouse-patroni.yml
+
+
+networks:
+  storage-network:
+    driver: bridge
