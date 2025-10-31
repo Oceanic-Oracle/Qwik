@@ -52,13 +52,16 @@
 
 ## Запуск
 
-Для запуска потребуется прописать эту команду из папки Backend при открытом Docker
+Для запуска потребуется прописать эту при открытом Docker
 
 ```bash
-docker build -t migrator ./infra/DbNomad/DbNomad
-docker build -t patroni ./infra/Patroni
-
-docker compose up --build
+docker build -t migrator ./Backend/infra/DbNomad/DbNomad
+docker build -t patroni ./Backend/infra/Patroni
+docker compose -f ./Backend/docker-compose.yml up --build
+```
+Или
+```bash
+make run
 ```
 
 ## API документация

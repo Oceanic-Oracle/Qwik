@@ -1,5 +1,0 @@
-include:
-  - nginx/compose.nginx.yml
-  - redis/compose.redis.yml
-  - storage/compose.yml
-  - zookeeper/compose.zookeeper.yml

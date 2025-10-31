@@ -1,5 +1,3 @@
-//protoc -I proto --go_out=paths=source_relative:mailer/service/internal/server/grpc-server/gen --go-grpc_out=paths=source_relative:mailer/service/internal/server/grpc-server/gen proto/mailer.proto
-
 syntax = "proto3";
 
 package api;

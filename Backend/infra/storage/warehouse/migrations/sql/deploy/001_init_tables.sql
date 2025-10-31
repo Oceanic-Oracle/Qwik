@@ -4,13 +4,13 @@ CREATE TABLE warehouse (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     location GEOGRAPHY(POINT, 4326),
-    address TEXT
+    address TEXT NOT NULL
 );
 
 CREATE TABLE rack (
     id SERIAL PRIMARY KEY,
     warehouse_id INTEGER NOT NULL REFERENCES warehouse(id) ON DELETE CASCADE,
-    aisle TEXT
+    aisle TEXT NOT NULL
 );
 
 CREATE TABLE shelf (

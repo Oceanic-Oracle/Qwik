@@ -1,0 +1,123 @@
+scalar DateTime
+
+type Warehouse {
+  id: ID!
+  name: String!
+  location: String!
+  address: String!
+  racks: [Rack!]!
+}
+
+type Rack {
+  id: ID!
+  warehouse: Warehouse!
+  aisle: String!
+  shelves: [Shelf!]!
+}
+
+type Shelf {
+  id: ID!
+  rack: Rack!
+  level: Int!
+  priority: Int!
+  maxCapacity: Float!
+  usedCapacity: Float!
+  products: [ShelfProduct!]!
+}
+
+type Product {
+  id: ID!
+  previewUrl: String
+  name: String!
+  description: String
+  createdAt: DateTime!
+  visibility: Boolean!
+  files: [File!]!
+  reviews: [Review!]!
+  tags: [Tag!]!
+  shelfProducts: [ShelfProduct!]!
+}
+
+type File {
+  id: ID!
+  product: Product!
+  url: String!
+}
+
+type Review {
+  id: ID!
+  login: String!
+  grade: Int!
+  description: String
+  product: Product!
+  createdAt: DateTime!
+}
+
+type Tag {
+  id: ID!
+  name: String!
+  products: [Product!]!
+}
+
+type ShelfProduct {
+  id: ID!
+  shelf: Shelf!
+  product: Product!
+  allocatedCapacity: Float!
+}
+
+# =============== INPUT TYPES ===============
+input CreateWarehouseInput {
+  name: String!
+  location: String!
+  address: String!
+}
+
+input CreateRackInput {
+  warehouseId: ID!
+  aisle: String!
+}
+
+input CreateShelfInput {
+  rackId: ID!
+  level: Int!
+  priority: Int!
+  maxCapacity: Float!
+}
+
+input CreateProductInput {
+  name: String!
+  description: String
+  previewUrl: String
+  visibility: Boolean = true
+}
+
+input AddProductToShelfInput {
+  shelfId: ID!
+  productId: ID!
+  allocatedCapacity: Float!
+}
+
+# =============== QUERIES & MUTATIONS ===============
+type Query {
+  warehouse(id: ID!): Warehouse
+  warehouses: [Warehouse!]!
+
+  product(id: ID!): Product
+  products(visibleOnly: Boolean = true): [Product!]!
+
+  shelf(id: ID!): Shelf
+  shelves: [Shelf!]!
+}
+
+type Mutation {
+  createWarehouse(input: CreateWarehouseInput!): Warehouse!
+
+  createRack(input: CreateRackInput!): Rack!
+
+  createShelf(input: CreateShelfInput!): Shelf!
+
+  createProduct(input: CreateProductInput!): Product!
+
+  addProductToShelf(input: AddProductToShelfInput!): ShelfProduct!
+}

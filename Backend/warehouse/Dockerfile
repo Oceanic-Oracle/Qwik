@@ -1,0 +1,24 @@
+FROM golang:alpine AS build
+
+RUN mkdir /app
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY internal ./internal
+COPY cmd/warehouse ./cmd/warehouse
+COPY pkg ./pkg
+
+RUN go build -o /app/bin ./cmd/user/app.go
+
+FROM alpine:3.21
+
+COPY --from=build /app/bin /app/bin
+
+COPY .env .env
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app/bin"]
