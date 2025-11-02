@@ -57,7 +57,7 @@
 ```bash
 docker build -t migrator ./Backend/infra/DbNomad/DbNomad
 docker build -t patroni ./Backend/infra/Patroni
-docker compose -f ./Backend/docker-compose.yml up --build
+docker compose -f ./Backend/compose.yml up --build
 ```
 Или
 ```bash
