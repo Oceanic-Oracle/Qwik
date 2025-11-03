@@ -1,0 +1,6 @@
+@bankapi_HostAddress = http://localhost:5291
+
+GET {{bankapi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
