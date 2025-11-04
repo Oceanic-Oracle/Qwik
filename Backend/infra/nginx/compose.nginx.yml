@@ -8,5 +8,6 @@ services:
     depends_on:
       - user
       - mailer
+      - warehouse
     networks:
       - qwik-network

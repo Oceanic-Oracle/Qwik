@@ -30,6 +30,7 @@ type Product {
   previewUrl: String
   name: String!
   description: String
+  price: Int!
   createdAt: DateTime!
   visibility: Boolean!
   files: [File!]!

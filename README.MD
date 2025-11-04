@@ -45,6 +45,7 @@
 - Haproxy
 - Redis
 - gRPC
+- GraphQL
 - Nginx
 - REST API
 - Docker

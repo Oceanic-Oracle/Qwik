@@ -11,7 +11,7 @@ COPY internal ./internal
 COPY cmd/warehouse ./cmd/warehouse
 COPY pkg ./pkg
 
-RUN go build -o /app/bin ./cmd/user/app.go
+RUN go build -o /app/bin ./cmd/warehouse/app.go
 
 FROM alpine:3.21
 

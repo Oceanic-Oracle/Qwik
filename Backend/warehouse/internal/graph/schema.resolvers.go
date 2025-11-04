@@ -47,12 +47,49 @@ func (r *queryResolver) Warehouses(ctx context.Context) ([]*model.Warehouse, err
 
 // Product is the resolver for the product field.
 func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product, error) {
-	panic(fmt.Errorf("not implemented: Product - product"))
+	r.Log.Info("🔍 Запрос product", "id", id)
+	dto, err := r.Repo.Product.GetProductById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	r.Log.Info("✅ Продукт найден", "id", dto.Id, "name", dto.Name)
+
+	// Проверим тип CreatedAt
+	r.Log.Info("🕒 CreatedAt", "value", dto.Created_at, "type", fmt.Sprintf("%T", dto.Created_at))
+
+	return &model.Product{
+		ID:          dto.Id.String(),
+		PreviewURL:  &dto.Preview_url,
+		Name:        dto.Name,
+		Description: &dto.Description,
+		Price:       int32(dto.Price),
+		CreatedAt:   dto.Created_at,
+		Visibility:  dto.Visibility,
+	}, nil
 }
 
 // Products is the resolver for the products field.
 func (r *queryResolver) Products(ctx context.Context, visibleOnly *bool) ([]*model.Product, error) {
-	panic(fmt.Errorf("not implemented: Products - products"))
+	rows, err := r.Repo.Product.GetProducts(ctx, visibleOnly)
+	if err != nil {
+		return nil, err
+	}
+
+	answ := make([]*model.Product, 0, len(rows))
+	for _, val := range rows {
+		body := &model.Product{
+			ID:          val.Id.String(),
+			PreviewURL:  &val.Preview_url,
+			Name:        val.Name,
+			Description: &val.Description,
+			Price:       int32(val.Price),
+			CreatedAt:   val.Created_at,
+		}
+		answ = append(answ, body)
+	}
+
+	return answ, nil
 }
 
 // Shelf is the resolver for the shelf field.

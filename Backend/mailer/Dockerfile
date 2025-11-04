@@ -16,7 +16,7 @@ FROM alpine:3.21
 
 COPY --from=build /app/bin /app/bin
 
-COPY internal/config/.env /internal/config/.env
+COPY .env .env
 
 EXPOSE 8081
 

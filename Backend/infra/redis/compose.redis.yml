@@ -1,7 +1,6 @@
 services:
   redis:
     image: redis:latest
-    container_name: user-redis
     ports:
       - "6379"
     env_file:

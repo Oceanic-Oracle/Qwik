@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE warehouse (
     id SERIAL PRIMARY KEY,
@@ -24,17 +25,18 @@ CREATE TABLE shelf (
 );
 
 CREATE TABLE product (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     preview_url TEXT,
     name TEXT NOT NULL,
     description TEXT,
+    price INTEGER,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     visibility BOOLEAN DEFAULT true
 );
 
 CREATE TABLE file (
     id SERIAL PRIMARY KEY,
-    product_id INTEGER NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
     url TEXT NOT NULL
 );
 
@@ -43,7 +45,7 @@ CREATE TABLE review (
     login TEXT NOT NULL,
     grade INTEGER NOT NULL CHECK (grade BETWEEN 1 AND 5),
     description TEXT,
-    product_id INTEGER NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE (login, product_id)
 );
@@ -55,7 +57,7 @@ CREATE TABLE tag (
 
 CREATE TABLE product_tag (
     id SERIAL PRIMARY KEY,
-    product_id INTEGER NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
     tag_id INTEGER NOT NULL REFERENCES tag(id) ON DELETE CASCADE,
     UNIQUE (product_id, tag_id)
 );
@@ -63,7 +65,7 @@ CREATE TABLE product_tag (
 CREATE TABLE shelf_product (
     id SERIAL PRIMARY KEY,
     shelf_id INTEGER NOT NULL REFERENCES shelf(id) ON DELETE CASCADE,
-    product_id INTEGER NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
     allocated_capacity NUMERIC NOT NULL CHECK (allocated_capacity > 0),
     UNIQUE (shelf_id, product_id)
 );

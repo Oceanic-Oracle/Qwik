@@ -51,6 +51,7 @@ type Product struct {
 	PreviewURL    *string         `json:"previewUrl,omitempty"`
 	Name          string          `json:"name"`
 	Description   *string         `json:"description,omitempty"`
+	Price         int32           `json:"price"`
 	CreatedAt     time.Time       `json:"createdAt"`
 	Visibility    bool            `json:"visibility"`
 	Files         []*File         `json:"files"`
