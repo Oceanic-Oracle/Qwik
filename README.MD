@@ -24,7 +24,7 @@
 
 Микросервисная схема:
 
-![Schema](images/schema.png?v=2)
+![Schema](images/schema.png?v=3)
 
 ## Стек технологий
 
