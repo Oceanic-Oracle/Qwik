@@ -1,0 +1,23 @@
+services:
+  bankapi:
+    build:
+      context: .
+      dockerfile: bankapi/bankapi/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - bank-network
+
+  client:
+    build:
+      context: .
+      dockerfile: Client/Client/Dockerfile
+    depends_on:
+      - bankapi
+    networks:
+      - bank-network
+    command: ["sh", "-c", "sleep 10 && dotnet Client.dll"] 
+
+networks:
+  bank-network:
+    driver: bridge

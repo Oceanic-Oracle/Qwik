@@ -1,23 +1,44 @@
+using bankapi.Services;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http2; 
+        listenOptions.UseHttps(ConfigureHttps);
+    });
+});
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddGrpc();
 
 var app = builder.Build();
+app.MapGrpcService<AuthService>();
+app.Run();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+static void ConfigureHttps(HttpsConnectionAdapterOptions options)
 {
-    app.MapOpenApi();
+ 
+    var cert = CreateDevelopmentCertificate();
+    options.ServerCertificate = cert;
 }
 
-app.UseHttpsRedirection();
+static X509Certificate2 CreateDevelopmentCertificate()
+{
+    using var rsa = RSA.Create(2048);
+    var certRequest = new CertificateRequest(
+        "CN=localhost",
+        rsa,
+        HashAlgorithmName.SHA256,
+        RSASignaturePadding.Pkcs1);
 
-app.UseAuthorization();
+    certRequest.CertificateExtensions.Add(
+        new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature, true));
 
-app.MapControllers();
-
-app.Run();
+    return certRequest.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1));
+}
