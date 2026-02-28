@@ -2,11 +2,14 @@ package product
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sync"
+	"warehouse/internal/repo/review"
 	"warehouse/pkg"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
 )
@@ -19,57 +22,101 @@ type product struct {
 	log *slog.Logger
 }
 
-func (p *product) GetProductById(ctx context.Context, id string) (*Product, error) {
-	const sql = `
-		SELECT
-			id::text
-    		,preview_url
-    		,name
-    		,description
-			,price
-    		,created_at
-    		,visibility
+func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAVG, []review.Review, error) {
+	productID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid product ID format: %w", err)
+	}
+
+	const productSQL = `
+		SELECT id, preview_url, name, description, price, created_at, visibility
 		FROM product
 		WHERE id = $1
 	`
 
-	var idStr string
-	dto := &Product{}
+	var prod ProductWithAVG
 	conn, _ := p.readConn(id)
-	if err := conn.QueryRow(ctx, sql, id).Scan(&idStr, &dto.Preview_url, &dto.Name,
-		&dto.Description, &dto.Price, &dto.Created_at, &dto.Visibility); err != nil {
-		return nil, err
-	}
 
-	var err error
-	dto.Id, err = uuid.Parse(idStr)
+	err = conn.QueryRow(ctx, productSQL, productID).Scan(
+		&prod.Id,
+		&prod.PreviewURL,
+		&prod.Name,
+		&prod.Description,
+		&prod.Price,
+		&prod.CreatedAt,
+		&prod.Visibility,
+	)
 	if err != nil {
-		return nil, err
+		if err == pgx.ErrNoRows {
+			return nil, nil, fmt.Errorf("product not found")
+		}
+		return nil, nil, fmt.Errorf("failed to fetch product: %w", err)
 	}
 
-	return dto, nil
+	const reviewsSQL = `
+		SELECT id, login, grade, description, created_at
+		FROM review
+		WHERE product_id = $1
+		ORDER BY created_at DESC
+	`
+
+	rows, err := conn.Query(ctx, reviewsSQL, productID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to query reviews: %w", err)
+	}
+	defer rows.Close()
+
+	sumGrade := float64(0)
+
+	var reviews []review.Review
+	for rows.Next() {
+		var rev review.Review
+		err := rows.Scan(&rev.Id, &rev.Login, &rev.Grade, &rev.Description, &rev.CreatedAt)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to scan review: %w", err)
+		}
+		reviews = append(reviews, rev)
+		sumGrade += float64(rev.Grade)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, nil, fmt.Errorf("row iteration error: %w", err)
+	}
+
+	if len(reviews) > 0 {
+		prod.Avg = sumGrade / float64(len(reviews))
+	} else {
+		prod.Avg = 0 // или оставить как 0.0 — стандартное значение
+	}
+
+	return &prod, reviews, nil
 }
 
-func (p *product) GetProducts(ctx context.Context, visibility *bool) ([]*Product, error) {
+func (p *product) GetProducts(ctx context.Context, visibility bool) ([]*ProductWithAVG, error) {
 	sql := `
 		SELECT
-			id::text
-    		,preview_url
-    		,name
-    		,description
-			,price
-    		,created_at
-		FROM product
+			p.id::text
+    		,p.preview_url
+    		,p.name
+    		,p.description
+			,p.price
+    		,p.created_at
+			,AVG(r.grade)
+		FROM product AS p
+			JOIN review AS r
+				ON p.id = r.product_id
 		WHERE visibility = $1
+		GROUP BY
+			p.id
 	`
 	var vis bool
-	if *visibility {
-		vis = *visibility
+	if visibility {
+		vis = visibility
 	} else {
-		vis = *visibility
+		vis = visibility
 	}
 
-	var answ []*Product
+	var answ []*ProductWithAVG
 	conns := p.allReadConn()
 	
 	errGroup, _ := errgroup.WithContext(ctx)
@@ -87,16 +134,13 @@ func (p *product) GetProducts(ctx context.Context, visibility *bool) ([]*Product
 			mtx.Lock()
 			defer mtx.Unlock()
 			for rows.Next() {
-				body := &Product{}
-				if err := rows.Scan(&idStr, &body.Preview_url, &body.Name, &body.Description, &body.Price, &body.Created_at);
+				body := &ProductWithAVG{}
+				if err := rows.Scan(&idStr, &body.PreviewURL, &body.Name, &body.Description, &body.Price, &body.CreatedAt, &body.Avg);
 					err != nil {
 					return err
 				}
 
-				body.Id, err = uuid.Parse(idStr)
-				if err != nil {
-					return err
-				}
+				body.Id = idStr
 
 				answ = append(answ, body)
 			}
@@ -106,6 +150,50 @@ func (p *product) GetProducts(ctx context.Context, visibility *bool) ([]*Product
 	}
 
 	return answ, errGroup.Wait()
+}
+
+func (p *product) CreateProduct(ctx context.Context, req *CreateProduct) (*ProductWithAVG, error) {
+	productID := uuid.New()
+
+	conn, _ := p.writeConn(productID.String())
+
+	const sql = `
+		INSERT INTO product (id, preview_url, name, description, price, created_at, visibility)
+		VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+		RETURNING id, preview_url, name, description, price, created_at, visibility
+	`
+
+	var result ProductWithAVG
+	err := conn.QueryRow(ctx, sql,
+		productID,
+		req.PreviewURL,
+		req.Name,
+		req.Description,
+		req.Price,
+		req.Visibility,
+	).Scan(
+		&result.Id,
+		&result.PreviewURL,
+		&result.Name,
+		&result.Description,
+		&result.Price,
+		&result.CreatedAt,
+		&result.Visibility,
+	)
+	if err != nil {
+		p.log.ErrorContext(ctx, "failed to create product",
+			"product_id", productID.String(),
+			"error", err)
+		return nil, fmt.Errorf("failed to create product: %w", err)
+	}
+
+	result.Avg = 0
+
+	p.log.InfoContext(ctx, "product created successfully",
+		"product_id", result.Id,
+		"name", result.Name)
+
+	return &result, nil
 }
 
 func NewProduct(writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),

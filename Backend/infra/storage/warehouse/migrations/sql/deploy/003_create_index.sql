@@ -1,1 +1,1 @@
-CREATE INDEX idx_warehouse_location ON warehouse USING GIST (location);
+-- CREATE INDEX idx_warehouse_location ON warehouse USING GIST (location);

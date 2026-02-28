@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -11,17 +12,17 @@ const (
 )
 
 type Config struct {
-	Env              string `env:"ENV"`
-	Htppserver       Httpserver
-	PgStorage        PgStorage
-	RedisStorage     RedisStorage
+	Env          string `env:"ENV"`
+	HTTP         HTTP
+	PgStorage    PgStorage
+	RedisStorage RedisStorage
 }
 
-type Httpserver struct {
-	Addr         string `env:"ADDR"`
-	Timeout      string `env:"TIMEOUT"`
-	IddleTimeout string `env:"IDLE_TIMEOUT"`
-	MaxConn      string `env:"MAX_CONN"`
+type HTTP struct {
+	Addr        string        `env:"SERVER_ADDR"`
+	Timeout     time.Duration `env:"SERVER_TIMEOUT_SECONDS"`
+	IdleTimeout time.Duration `env:"SERVER_IDLE_TIMEOUT_SECONDS"`
+	MaxConn     string        `env:"SERVER_MAX_CONN"`
 }
 
 type PgStorage struct {

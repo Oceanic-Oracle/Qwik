@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"log/slog"
 	"warehouse/internal/repo/product"
+	"warehouse/internal/repo/review"
 	"warehouse/pkg"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,6 +12,7 @@ import (
 
 type Repo struct {
 	Product product.ProductInterface
+	Review  review.ReviewInterface
 }
 
 func NewRepo(connPool *pkg.ConnectionPool, log *slog.Logger) *Repo {
@@ -32,6 +34,7 @@ func NewRepo(connPool *pkg.ConnectionPool, log *slog.Logger) *Repo {
 
 	return &Repo{
 		Product: product.NewProduct(writeConn, readConn, allReadConn, log),
+		Review: review.NewReview(writeConn, readConn, allReadConn, log),
 	}
 }
 

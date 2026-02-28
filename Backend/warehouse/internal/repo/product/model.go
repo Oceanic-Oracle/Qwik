@@ -2,16 +2,33 @@ package product
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Product struct {
-	Id          uuid.UUID
-	Preview_url string
+	Id          string
+	PreviewURL  string
 	Name        string
 	Description string
-	Price       int
-	Created_at  time.Time
+	Price       int64
+	CreatedAt   time.Time
+	Visibility  bool
+}
+
+type ProductWithAVG struct {
+	Id          string
+	PreviewURL  string
+	Name        string
+	Description string
+	Price       int64
+	CreatedAt   time.Time
+	Visibility  bool
+	Avg         float64
+}
+
+type CreateProduct struct {
+	PreviewURL  string
+	Name        string
+	Description string
+	Price       int64
 	Visibility  bool
 }
