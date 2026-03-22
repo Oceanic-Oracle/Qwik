@@ -12,6 +12,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 CREATE TRIGGER trg_update_shelf_capacity
 AFTER INSERT OR UPDATE OR DELETE ON shelf_product
 FOR EACH ROW EXECUTE FUNCTION update_shelf_used_capacity();
+
+CREATE OR REPLACE FUNCTION calculate_allocated_capacity()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.allocated_capacity := NEW.quantity * (
+        SELECT volume FROM product WHERE id = NEW.product_id
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trg_calculate_capacity
+BEFORE INSERT OR UPDATE OF quantity, product_id ON shelf_product
+FOR EACH ROW
+WHEN (NEW.product_id IS NOT NULL)
+EXECUTE FUNCTION calculate_allocated_capacity();

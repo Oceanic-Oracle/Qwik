@@ -1,16 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE warehouse (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    location GEOGRAPHY(POINT, 4326),
-    address TEXT NOT NULL
-);
-
 CREATE TABLE rack (
     id SERIAL PRIMARY KEY,
-    warehouse_id INTEGER NOT NULL REFERENCES warehouse(id) ON DELETE CASCADE,
     aisle TEXT NOT NULL
 );
 
@@ -30,6 +22,11 @@ CREATE TABLE product (
     name TEXT NOT NULL,
     description TEXT,
     price INTEGER,
+    width NUMERIC,
+    height NUMERIC,
+    depth NUMERIC,
+    weight NUMERIC,
+    volume NUMERIC,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     visibility BOOLEAN DEFAULT true
 );
@@ -42,13 +39,16 @@ CREATE TABLE file (
 
 CREATE TABLE review (
     id SERIAL PRIMARY KEY,
-    login TEXT NOT NULL,
+    login TEXT,
     grade INTEGER NOT NULL CHECK (grade BETWEEN 1 AND 5),
     description TEXT,
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (login, product_id)
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX unique_review_with_login 
+ON review (login, product_id) 
+WHERE login IS NOT NULL;
 
 CREATE TABLE tag (
     id SERIAL PRIMARY KEY,
@@ -66,6 +66,7 @@ CREATE TABLE shelf_product (
     id SERIAL PRIMARY KEY,
     shelf_id INTEGER NOT NULL REFERENCES shelf(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
-    allocated_capacity NUMERIC NOT NULL CHECK (allocated_capacity > 0),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    allocated_capacity NUMERIC NOT NULL,
     UNIQUE (shelf_id, product_id)
 );

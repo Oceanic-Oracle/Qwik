@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 	"warehouse/internal/dto"
 	"warehouse/internal/repo"
@@ -15,7 +16,21 @@ func GetProducts(repo *repo.Repo, log *slog.Logger) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		productsModel, err := repo.Product.GetProducts(ctx, true)
+		visibilityParam := r.URL.Query().Get("visibility")
+		
+		var visibility *bool
+		if visibilityParam != "" {
+			// Парсим строковое значение в bool
+			visibilityBool, err := strconv.ParseBool(visibilityParam)
+			if err != nil {
+				log.Error("Invalid visibility parameter", slog.Any("error", err))
+				http.Error(w, "Invalid visibility parameter. Use true or false", http.StatusBadRequest)
+				return
+			}
+			visibility = &visibilityBool
+		}
+
+		productsModel, err := repo.Product.GetProducts(ctx, visibility)
 		if err != nil {
 			log.Error("Failed to get products", slog.Any("error", err))
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -31,6 +46,7 @@ func GetProducts(repo *repo.Repo, log *slog.Logger) http.HandlerFunc {
 				Description: prod.Description,
 				Price:       prod.Price,
 				CreatedAt:   prod.CreatedAt,
+				Count:       prod.Count,
 				Visibility:  prod.Visibility,
 				Avg:         prod.Avg,
 				Reviews:     []dto.Review{},

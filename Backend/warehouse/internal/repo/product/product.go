@@ -29,9 +29,38 @@ func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAV
 	}
 
 	const productSQL = `
-		SELECT id, preview_url, name, description, price, created_at, visibility
-		FROM product
-		WHERE id = $1
+		SELECT
+			id
+			,preview_url
+			,name
+			,description
+			,price
+			,created_at
+			,visibility
+			,count
+			,CASE WHEN avg IS NULL 
+				THEN 0.0
+				ELSE avg
+			END AS avg
+		FROM
+		(
+			SELECT
+				p.id::text
+				,p.preview_url
+				,p.name
+				,p.description
+				,p.price
+				,p.created_at
+				,visibility
+				,COUNT(r.id) AS count
+				,AVG(r.grade) AS avg
+			FROM product AS p
+				LEFT JOIN review AS r
+					ON p.id = r.product_id
+			WHERE p.id = $1
+			GROUP BY
+				p.id
+		) AS a
 	`
 
 	var prod ProductWithAVG
@@ -45,6 +74,8 @@ func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAV
 		&prod.Price,
 		&prod.CreatedAt,
 		&prod.Visibility,
+		&prod.Count,
+		&prod.Avg,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -83,38 +114,50 @@ func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAV
 		return nil, nil, fmt.Errorf("row iteration error: %w", err)
 	}
 
-	if len(reviews) > 0 {
-		prod.Avg = sumGrade / float64(len(reviews))
-	} else {
-		prod.Avg = 0 // или оставить как 0.0 — стандартное значение
-	}
-
 	return &prod, reviews, nil
 }
 
-func (p *product) GetProducts(ctx context.Context, visibility bool) ([]*ProductWithAVG, error) {
+func (p *product) GetProducts(ctx context.Context, visibility *bool) ([]*ProductWithAVG, error) {
 	sql := `
 		SELECT
-			p.id::text
-    		,p.preview_url
-    		,p.name
-    		,p.description
-			,p.price
-    		,p.created_at
-			,AVG(r.grade)
-		FROM product AS p
-			JOIN review AS r
-				ON p.id = r.product_id
+			id
+			,preview_url
+			,name
+			,description
+			,price
+			,created_at
+			,visibility
+			,count
+			,CASE WHEN avg IS NULL 
+				THEN 0.0
+				ELSE avg
+			END AS avg
+		FROM
+		(
+			SELECT
+				p.id::text
+				,p.preview_url
+				,p.name
+				,p.description
+				,p.price
+				,p.created_at
+				,p.visibility
+				,COUNT(r.id) AS count
+				,AVG(r.grade) AS avg
+			FROM product AS p
+				LEFT JOIN review AS r
+					ON p.id = r.product_id
+			`
+	if visibility != nil {
+		sql += `
 		WHERE visibility = $1
-		GROUP BY
-			p.id
-	`
-	var vis bool
-	if visibility {
-		vis = visibility
-	} else {
-		vis = visibility
+		`
 	}
+	sql += `
+			GROUP BY
+				p.id
+		) AS a
+	`
 
 	var answ []*ProductWithAVG
 	conns := p.allReadConn()
@@ -124,7 +167,13 @@ func (p *product) GetProducts(ctx context.Context, visibility bool) ([]*ProductW
 
 	for _, conn := range conns {
 		errGroup.Go(func() error {
-			rows, err := conn.Query(ctx, sql, vis)
+			var rows pgx.Rows
+			var err error
+			if visibility != nil {
+				rows, err = conn.Query(ctx, sql, visibility)
+			} else {
+				rows, err = conn.Query(ctx, sql)
+			}
 			if err != nil {
 				return err	
 			}
@@ -135,7 +184,7 @@ func (p *product) GetProducts(ctx context.Context, visibility bool) ([]*ProductW
 			defer mtx.Unlock()
 			for rows.Next() {
 				body := &ProductWithAVG{}
-				if err := rows.Scan(&idStr, &body.PreviewURL, &body.Name, &body.Description, &body.Price, &body.CreatedAt, &body.Avg);
+				if err := rows.Scan(&idStr, &body.PreviewURL, &body.Name, &body.Description, &body.Price, &body.CreatedAt, &body.Visibility, &body.Count, &body.Avg);
 					err != nil {
 					return err
 				}

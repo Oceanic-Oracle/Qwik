@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"warehouse/internal/repo/product"
 	"warehouse/internal/repo/review"
+	"warehouse/internal/repo/shelf"
 	"warehouse/pkg"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,6 +14,7 @@ import (
 type Repo struct {
 	Product product.ProductInterface
 	Review  review.ReviewInterface
+	Shelf   *shelf.ShelfRepo // <-- добавлено
 }
 
 func NewRepo(connPool *pkg.ConnectionPool, log *slog.Logger) *Repo {
@@ -34,14 +36,13 @@ func NewRepo(connPool *pkg.ConnectionPool, log *slog.Logger) *Repo {
 
 	return &Repo{
 		Product: product.NewProduct(writeConn, readConn, allReadConn, log),
-		Review: review.NewReview(writeConn, readConn, allReadConn, log),
+		Review:  review.NewReview(writeConn, readConn, allReadConn, log),
+		Shelf:   shelf.NewShelfRepo(writeConn, readConn, allReadConn, log), // <-- инициализация
 	}
 }
 
 func getShardNum(data string, num int) pkg.ShardNum {
 	hash := sha256.Sum256([]byte(data))
-
 	hashUint := uint8(hash[0])
-
 	return pkg.ShardNum(hashUint % uint8(num))
 }

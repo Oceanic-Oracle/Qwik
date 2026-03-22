@@ -38,8 +38,10 @@ func GetProduct(repo *repo.Repo, log *slog.Logger) http.HandlerFunc {
 			Price:       prodModel.Price,
 			CreatedAt:   prodModel.CreatedAt,
 			Visibility:  prodModel.Visibility,
-			Avg:         prodModel.Avg,
-			Reviews:     make([]dto.Review, len(reviewsModel)),
+
+			Count:   prodModel.Count,
+			Avg:     prodModel.Avg,
+			Reviews: make([]dto.Review, len(reviewsModel)),
 		}
 
 		for i, rev := range reviewsModel {

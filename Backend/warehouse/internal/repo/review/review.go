@@ -49,6 +49,30 @@ func (r *review) GetReviews(ctx context.Context, productId string) ([]*Review, e
 	return reviews, nil
 }
 
+func (r *review) CreateReview(ctx context.Context, productID string, rev Review) (int, error) {
+	query := `
+		INSERT INTO review (login, grade, description, product_id)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
+	`
+
+	conn, _ := r.writeConn(productID)
+
+	var id int
+	err := conn.QueryRow(ctx, query,
+		rev.Login,
+		rev.Grade,
+		rev.Description,
+		productID,
+	).Scan(&id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
 func NewReview(writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
 	readConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
 	allReadConn func() []*pgxpool.Pool,
@@ -60,13 +84,3 @@ func NewReview(writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
 		log:         log,
 	}
 }
-
-// CREATE TABLE review (
-//     id SERIAL PRIMARY KEY,
-//     login TEXT NOT NULL,
-//     grade INTEGER NOT NULL CHECK (grade BETWEEN 1 AND 5),
-//     description TEXT,
-//     product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
-//     created_at TIMESTAMPTZ DEFAULT NOW(),
-//     UNIQUE (login, product_id)
-// );

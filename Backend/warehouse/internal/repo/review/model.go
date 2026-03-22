@@ -3,8 +3,8 @@ package review
 import "time"
 
 type Review struct {
-	Id          string
-	Login       string
+	Id          int
+	Login       *string
 	Grade       int
 	Description string
 	CreatedAt   time.Time

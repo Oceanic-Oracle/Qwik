@@ -22,6 +22,7 @@ type ProductWithAVG struct {
 	Price       int64
 	CreatedAt   time.Time
 	Visibility  bool
+	Count       int64
 	Avg         float64
 }
 

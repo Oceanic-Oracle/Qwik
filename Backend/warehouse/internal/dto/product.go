@@ -12,14 +12,7 @@ type Product struct {
 	Price       int64     `json:"price"`
 	CreatedAt   time.Time `json:"created_at"`
 	Visibility  bool      `json:"visibility"`
+	Count       int64     `json:"count"`
 	Avg         float64   `json:"avg"`
 	Reviews     []Review  `json:"reviews,omitempty"`
-}
-
-type Review struct {
-	Id          string    `json:"id"`
-	Login       string    `json:"login"`
-	Grade       int       `json:"grade"`
-	Description string    `json:"description,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
 }
