@@ -30,30 +30,40 @@ func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAV
 
 	const productSQL = `
 		SELECT
-			id
-			,preview_url
-			,name
-			,description
-			,price
-			,created_at
-			,visibility
-			,count
-			,CASE WHEN avg IS NULL 
+			id,
+			preview_url,
+			name,
+			description,
+			price,
+			width,
+			height,
+			depth,
+			weight,
+			volume,
+			created_at,
+			visibility,
+			count,
+			CASE WHEN avg IS NULL 
 				THEN 0.0
 				ELSE avg
 			END AS avg
 		FROM
 		(
 			SELECT
-				p.id::text
-				,p.preview_url
-				,p.name
-				,p.description
-				,p.price
-				,p.created_at
-				,visibility
-				,COUNT(r.id) AS count
-				,AVG(r.grade) AS avg
+				p.id::text,
+				p.preview_url,
+				p.name,
+				p.description,
+				p.price,
+				p.width,
+				p.height,
+				p.depth,
+				p.weight,
+				p.volume,
+				p.created_at,
+				p.visibility,
+				COUNT(r.id) AS count,
+				AVG(r.grade) AS avg
 			FROM product AS p
 				LEFT JOIN review AS r
 					ON p.id = r.product_id
@@ -72,6 +82,11 @@ func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAV
 		&prod.Name,
 		&prod.Description,
 		&prod.Price,
+		&prod.Width,
+		&prod.Height,
+		&prod.Depth,
+		&prod.Weight,
+		&prod.Volume,
 		&prod.CreatedAt,
 		&prod.Visibility,
 		&prod.Count,
@@ -97,8 +112,6 @@ func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAV
 	}
 	defer rows.Close()
 
-	sumGrade := float64(0)
-
 	var reviews []review.Review
 	for rows.Next() {
 		var rev review.Review
@@ -107,7 +120,6 @@ func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAV
 			return nil, nil, fmt.Errorf("failed to scan review: %w", err)
 		}
 		reviews = append(reviews, rev)
-		sumGrade += float64(rev.Grade)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -120,30 +132,40 @@ func (p *product) GetProductById(ctx context.Context, id string) (*ProductWithAV
 func (p *product) GetProducts(ctx context.Context, visibility *bool) ([]*ProductWithAVG, error) {
 	sql := `
 		SELECT
-			id
-			,preview_url
-			,name
-			,description
-			,price
-			,created_at
-			,visibility
-			,count
-			,CASE WHEN avg IS NULL 
+			id,
+			preview_url,
+			name,
+			description,
+			price,
+			width,
+			height,
+			depth,
+			weight,
+			volume,
+			created_at,
+			visibility,
+			count,
+			CASE WHEN avg IS NULL 
 				THEN 0.0
 				ELSE avg
 			END AS avg
 		FROM
 		(
 			SELECT
-				p.id::text
-				,p.preview_url
-				,p.name
-				,p.description
-				,p.price
-				,p.created_at
-				,p.visibility
-				,COUNT(r.id) AS count
-				,AVG(r.grade) AS avg
+				p.id::text,
+				p.preview_url,
+				p.name,
+				p.description,
+				p.price,
+				p.width,
+				p.height,
+				p.depth,
+				p.weight,
+				p.volume,
+				p.created_at,
+				p.visibility,
+				COUNT(r.id) AS count,
+				AVG(r.grade) AS avg
 			FROM product AS p
 				LEFT JOIN review AS r
 					ON p.id = r.product_id
@@ -161,7 +183,7 @@ func (p *product) GetProducts(ctx context.Context, visibility *bool) ([]*Product
 
 	var answ []*ProductWithAVG
 	conns := p.allReadConn()
-	
+
 	errGroup, _ := errgroup.WithContext(ctx)
 	mtx := &sync.Mutex{}
 
@@ -175,7 +197,7 @@ func (p *product) GetProducts(ctx context.Context, visibility *bool) ([]*Product
 				rows, err = conn.Query(ctx, sql)
 			}
 			if err != nil {
-				return err	
+				return err
 			}
 			defer rows.Close()
 
@@ -184,8 +206,22 @@ func (p *product) GetProducts(ctx context.Context, visibility *bool) ([]*Product
 			defer mtx.Unlock()
 			for rows.Next() {
 				body := &ProductWithAVG{}
-				if err := rows.Scan(&idStr, &body.PreviewURL, &body.Name, &body.Description, &body.Price, &body.CreatedAt, &body.Visibility, &body.Count, &body.Avg);
-					err != nil {
+				if err := rows.Scan(
+					&idStr,
+					&body.PreviewURL,
+					&body.Name,
+					&body.Description,
+					&body.Price,
+					&body.Width,
+					&body.Height,
+					&body.Depth,
+					&body.Weight,
+					&body.Volume,
+					&body.CreatedAt,
+					&body.Visibility,
+					&body.Count,
+					&body.Avg,
+				); err != nil {
 					return err
 				}
 
@@ -207,9 +243,34 @@ func (p *product) CreateProduct(ctx context.Context, req *CreateProduct) (*Produ
 	conn, _ := p.writeConn(productID.String())
 
 	const sql = `
-		INSERT INTO product (id, preview_url, name, description, price, created_at, visibility)
-		VALUES ($1, $2, $3, $4, $5, NOW(), $6)
-		RETURNING id, preview_url, name, description, price, created_at, visibility
+		INSERT INTO product (
+			id, 
+			preview_url, 
+			name, 
+			description, 
+			price, 
+			width, 
+			height, 
+			depth, 
+			weight, 
+			volume, 
+			created_at, 
+			visibility
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), $11)
+		RETURNING 
+			id, 
+			preview_url, 
+			name, 
+			description, 
+			price, 
+			width, 
+			height, 
+			depth, 
+			weight, 
+			volume, 
+			created_at, 
+			visibility
 	`
 
 	var result ProductWithAVG
@@ -219,6 +280,11 @@ func (p *product) CreateProduct(ctx context.Context, req *CreateProduct) (*Produ
 		req.Name,
 		req.Description,
 		req.Price,
+		req.Width,
+		req.Height,
+		req.Depth,
+		req.Weight,
+		req.Volume,
 		req.Visibility,
 	).Scan(
 		&result.Id,
@@ -226,6 +292,11 @@ func (p *product) CreateProduct(ctx context.Context, req *CreateProduct) (*Produ
 		&result.Name,
 		&result.Description,
 		&result.Price,
+		&result.Width,
+		&result.Height,
+		&result.Depth,
+		&result.Weight,
+		&result.Volume,
 		&result.CreatedAt,
 		&result.Visibility,
 	)
@@ -237,6 +308,7 @@ func (p *product) CreateProduct(ctx context.Context, req *CreateProduct) (*Produ
 	}
 
 	result.Avg = 0
+	result.Count = 0
 
 	p.log.InfoContext(ctx, "product created successfully",
 		"product_id", result.Id,
@@ -245,10 +317,12 @@ func (p *product) CreateProduct(ctx context.Context, req *CreateProduct) (*Produ
 	return &result, nil
 }
 
-func NewProduct(writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
+func NewProduct(
+	writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
 	readConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
 	allReadConn func() []*pgxpool.Pool,
-	log *slog.Logger) ProductInterface {
+	log *slog.Logger,
+) ProductInterface {
 	return &product{
 		writeConn:   writeConn,
 		readConn:    readConn,

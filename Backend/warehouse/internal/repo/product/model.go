@@ -10,6 +10,11 @@ type Product struct {
 	Name        string
 	Description string
 	Price       int64
+	Width       *float64
+	Height      *float64
+	Depth       *float64
+	Weight      *float64
+	Volume      *float64
 	CreatedAt   time.Time
 	Visibility  bool
 }
@@ -20,6 +25,11 @@ type ProductWithAVG struct {
 	Name        string
 	Description string
 	Price       int64
+	Width       *float64
+	Height      *float64
+	Depth       *float64
+	Weight      *float64
+	Volume      *float64
 	CreatedAt   time.Time
 	Visibility  bool
 	Count       int64
@@ -31,5 +41,10 @@ type CreateProduct struct {
 	Name        string
 	Description string
 	Price       int64
+	Width       *float64
+	Height      *float64
+	Depth       *float64
+	Weight      *float64
+	Volume      *float64
 	Visibility  bool
 }

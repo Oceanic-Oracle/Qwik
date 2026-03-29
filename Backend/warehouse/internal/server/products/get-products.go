@@ -20,7 +20,6 @@ func GetProducts(repo *repo.Repo, log *slog.Logger) http.HandlerFunc {
 		
 		var visibility *bool
 		if visibilityParam != "" {
-			// Парсим строковое значение в bool
 			visibilityBool, err := strconv.ParseBool(visibilityParam)
 			if err != nil {
 				log.Error("Invalid visibility parameter", slog.Any("error", err))

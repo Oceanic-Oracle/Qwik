@@ -483,6 +483,35 @@
             color: #555;
         }
 
+        .dimensions-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .dimension-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .dimension-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .dimension-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
         .reviews-section {
             border-top: 2px solid #f0f0f0;
             padding-top: 25px;
@@ -584,7 +613,6 @@
             margin-right: 4px;
         }
 
-        /* Новый компактный стиль для звездного рейтинга слева */
         .rating-row {
             display: flex;
             align-items: center;
@@ -893,6 +921,24 @@
         .detail-container {
             margin-top: 20px;
         }
+
+        .size-input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .size-input-group .form-group {
+            margin-bottom: 0;
+        }
+        
+        .auto-calc-hint {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -958,6 +1004,30 @@
                                 <label>Цена *</label>
                                 <input type="number" id="productPrice" min="0" placeholder="9999" required>
                             </div>
+                            
+                            <div class="form-group">
+                                <label>Габариты и вес</label>
+                                <div class="size-input-group">
+                                    <div>
+                                        <label style="font-size: 0.85em;">Ширина (см)</label>
+                                        <input type="number" id="productWidth" step="0.1" placeholder="0.0">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.85em;">Высота (см)</label>
+                                        <input type="number" id="productHeight" step="0.1" placeholder="0.0">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.85em;">Глубина (см)</label>
+                                        <input type="number" id="productDepth" step="0.1" placeholder="0.0">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.85em;">Вес (кг)</label>
+                                        <input type="number" id="productWeight" step="0.01" placeholder="0.0">
+                                    </div>
+                                </div>
+                                <small class="auto-calc-hint">📐 Объем будет рассчитан автоматически: ширина × высота × глубина</small>
+                            </div>
+                            
                             <div class="form-group">
                                 <label>Изображение</label>
                                 <input type="file" id="productImage" accept="image/*">
@@ -1045,6 +1115,15 @@
         // Переменные для звездного рейтинга
         let currentRating = 5;
         let hoverRating = 0;
+
+        // Функция для расчета объема
+        function calculateVolume() {
+            const width = parseFloat(document.getElementById('productWidth').value) || 0;
+            const height = parseFloat(document.getElementById('productHeight').value) || 0;
+            const depth = parseFloat(document.getElementById('productDepth').value) || 0;
+            const volume = width * height * depth;
+            return volume > 0 ? volume : null;
+        }
 
         // Проверка подключения к серверу
         async function checkPing() {
@@ -1349,7 +1428,7 @@
             event.preventDefault();
             
             const description = document.getElementById('reviewDescription').value;
-            const grade = currentRating; // Используем currentRating вместо радио-кнопок
+            const grade = currentRating;
             const jwt = document.getElementById('reviewJwt').value;
             
             if (!description || !grade) {
@@ -1357,7 +1436,6 @@
                 return;
             }
             
-            // Формируем тело запроса
             const reviewData = {
                 product_id: productId,
                 description: description,
@@ -1377,12 +1455,10 @@
                     'Accept': 'application/json'
                 };
                 
-                // Добавляем JWT в заголовок, если он указан
                 if (jwt && jwt.trim()) {
                     headers['Authorization'] = 'Bearer ' + jwt.trim();
                 }
                 
-                // Важно: для CORS запросов нужно отправлять credentials: 'omit'
                 const response = await fetch(`${API_BASE}/review/create`, {
                     method: 'POST',
                     mode: 'cors',
@@ -1395,7 +1471,6 @@
                     let errorMessage;
                     try {
                         errorMessage = await response.text();
-                        // Проверяем специфические ошибки
                         if (response.status === 409) {
                             errorMessage = 'Вы уже оставляли отзыв на этот товар';
                         } else if (response.status === 400) {
@@ -1414,12 +1489,10 @@
                 
                 showToast('✅ Отзыв успешно добавлен!', 'success');
                 
-                // Очищаем форму
                 document.getElementById('reviewDescription').value = '';
                 document.getElementById('reviewJwt').value = '';
-                setRating(5); // Сбрасываем на 5 звезд
+                setRating(5);
                 
-                // Обновляем детали товара, чтобы показать новый отзыв
                 await loadProductDetail();
                 
             } catch (error) {
@@ -1450,6 +1523,44 @@
                     </div>
                 `).join('')
                 : '<p style="color: #666; text-align: center;">Пока нет отзывов</p>';
+            
+            let dimensionsHtml = '';
+            if (product.width || product.height || product.depth || product.weight) {
+                dimensionsHtml = `
+                    <div class="dimensions-section">
+                        ${product.width ? `
+                            <div class="dimension-item">
+                                <div class="dimension-label">📏 Ширина</div>
+                                <div class="dimension-value">${product.width} см</div>
+                            </div>
+                        ` : ''}
+                        ${product.height ? `
+                            <div class="dimension-item">
+                                <div class="dimension-label">📐 Высота</div>
+                                <div class="dimension-value">${product.height} см</div>
+                            </div>
+                        ` : ''}
+                        ${product.depth ? `
+                            <div class="dimension-item">
+                                <div class="dimension-label">📏 Глубина</div>
+                                <div class="dimension-value">${product.depth} см</div>
+                            </div>
+                        ` : ''}
+                        ${product.weight ? `
+                            <div class="dimension-item">
+                                <div class="dimension-label">⚖️ Вес</div>
+                                <div class="dimension-value">${product.weight} кг</div>
+                            </div>
+                        ` : ''}
+                        ${product.volume ? `
+                            <div class="dimension-item">
+                                <div class="dimension-label">📦 Объем</div>
+                                <div class="dimension-value">${product.volume} см³</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
             
             cardElement.innerHTML = `
                 <div class="product-detail-image-container">
@@ -1485,7 +1596,13 @@
                             <span>👁️</span>
                             <span>${product.visibility ? 'Видимый' : 'Скрытый'}</span>
                         </div>
+                        <div class="meta-item">
+                            <span>📅</span>
+                            <span>Создан: ${formatDate(product.created_at)}</span>
+                        </div>
                     </div>
+                    
+                    ${dimensionsHtml}
                     
                     <div class="product-detail-description">
                         <strong>📄 Описание:</strong><br>
@@ -1497,10 +1614,6 @@
                     <div class="reviews-section">
                         <h3 class="reviews-title">📊 Отзывы покупателей</h3>
                         ${reviewsHtml}
-                    </div>
-                    
-                    <div style="margin-top: 20px; color: #999; font-size: 0.9em;">
-                        📅 Создан: ${formatDate(product.created_at)}
                     </div>
                 </div>
             `;
@@ -1552,7 +1665,6 @@
             productsJson.innerHTML = '<div class="loading"></div> Загрузка товаров...';
             
             try {
-                // Формируем URL с параметром фильтрации
                 let url = `${API_BASE}/products`;
                 if (currentVisibilityFilter !== 'all') {
                     url += `?visibility=${currentVisibilityFilter}`;
@@ -1574,7 +1686,6 @@
                 const products = await response.json();
                 currentProductsData = products;
                 
-                // Обновляем счетчики (для этого нам нужны все товары)
                 const allProductsResponse = await fetch(`${API_BASE}/products`, {
                     method: 'GET',
                     mode: 'cors',
@@ -1589,7 +1700,6 @@
                     updateFilterCounts(allProducts);
                 }
                 
-                // Обновляем отображение в зависимости от выбранного вида
                 if (currentListView === 'cards') {
                     productsList.classList.remove('hidden');
                     productsJson.classList.add('hidden');
@@ -1644,7 +1754,6 @@
             const cardElement = document.getElementById('productDetailCard');
             const jsonElement = document.getElementById('productDetailJson');
             
-            // Прячем контейнер с деталями пока грузим
             containerElement.classList.add('hidden');
             
             try {
@@ -1665,10 +1774,8 @@
                 const product = await response.json();
                 currentProductData = product;
                 
-                // Показываем контейнер с деталями
                 containerElement.classList.remove('hidden');
                 
-                // Показываем карточку по умолчанию и делаем соответствующую кнопку активной
                 currentDetailView = 'card';
                 document.getElementById('detail-view-card').classList.add('active');
                 document.getElementById('detail-view-json').classList.remove('active');
@@ -1692,6 +1799,14 @@
             const visibility = document.getElementById('productVisibility').checked;
             const imageFile = document.getElementById('productImage').files[0];
             
+            const width = document.getElementById('productWidth').value;
+            const height = document.getElementById('productHeight').value;
+            const depth = document.getElementById('productDepth').value;
+            const weight = document.getElementById('productWeight').value;
+            
+            // Рассчитываем объем автоматически
+            const volume = calculateVolume();
+            
             if (!name || !price) {
                 showToast('Заполните обязательные поля', 'error');
                 return;
@@ -1702,6 +1817,13 @@
             formData.append('description', description);
             formData.append('price', price);
             formData.append('visibility', visibility);
+            
+            if (width) formData.append('width', width);
+            if (height) formData.append('height', height);
+            if (depth) formData.append('depth', depth);
+            if (weight) formData.append('weight', weight);
+            if (volume) formData.append('volume', volume.toString());
+            
             if (imageFile) {
                 formData.append('image', imageFile);
             }
@@ -1728,6 +1850,7 @@
                 showToast(`✅ Товар "${product.name}" успешно создан!`, 'success');
                 
                 document.getElementById('createProductForm').reset();
+                document.getElementById('productVisibility').checked = true;
                 
                 const tabs = document.querySelectorAll('.tab');
                 tabs.forEach(tab => {
@@ -1740,7 +1863,7 @@
                 
             } catch (error) {
                 console.error('Create product error:', error);
-                showToast('❌ Ошибка создания товара', 'error');
+                showToast('❌ Ошибка создания товара: ' + error.message, 'error');
             } finally {
                 submitButton.innerHTML = originalText;
                 submitButton.disabled = false;
@@ -1845,7 +1968,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Устанавливаем фильтр "Все" активным при загрузке
             document.getElementById('filter-all').classList.add('active');
             checkPing();
         });
