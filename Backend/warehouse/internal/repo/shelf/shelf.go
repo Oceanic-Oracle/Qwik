@@ -1,214 +1,363 @@
 package shelf
 
 import (
-	"context"
-	"fmt"
-	"log/slog"
+    "context"
+    "errors"
+    "fmt"
+    "log/slog"
+    "warehouse/internal/dto"
+    "warehouse/pkg"
+    "time"
 
-	"warehouse/internal/domain"
-	"warehouse/pkg"
+    "github.com/jackc/pgx/v5"
+    "github.com/jackc/pgx/v5/pgxpool"
+    "github.com/redis/go-redis/v9"
+)
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/twpayne/go-geom"
-	"github.com/twpayne/go-geom/encoding/ewkb"
+var (
+    ErrNoSpace         = errors.New("недостаточно места на складе")
+    ErrNotEnoughStock  = errors.New("недостаточно товара для списания")
+    ErrProductNotFound = errors.New("товар не найден")
+    ErrNoVolume        = errors.New("у товара не указан объем (нужен для расчета места)")
+    ErrShelfLocked     = errors.New("полка сейчас обрабатывается другим запросом, попробуйте позже")
 )
 
 type ShelfRepo struct {
-	writeConn   func(s string) (*pgxpool.Pool, pkg.ShardNum)
-	readConn    func(s string) (*pgxpool.Pool, pkg.ShardNum)
-	allReadConn func() []*pgxpool.Pool
-	log         *slog.Logger
+    writeConn   func(s string) (*pgxpool.Pool, pkg.ShardNum)
+    readConn    func(s string) (*pgxpool.Pool, pkg.ShardNum)
+    allReadConn func() []*pgxpool.Pool
+    redis       *redis.Client
+    log         *slog.Logger
 }
 
 func NewShelfRepo(
-	writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
-	readConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
-	allReadConn func() []*pgxpool.Pool,
-	log *slog.Logger,
+    writeConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
+    readConn func(s string) (*pgxpool.Pool, pkg.ShardNum),
+    allReadConn func() []*pgxpool.Pool,
+    redisClient *redis.Client,
+    log *slog.Logger,
 ) *ShelfRepo {
-	return &ShelfRepo{
-		writeConn:   writeConn,
-		readConn:    readConn,
-		allReadConn: allReadConn,
-		log:         log,
-	}
+    return &ShelfRepo{
+        writeConn:   writeConn,
+        readConn:    readConn,
+        allReadConn: allReadConn,
+        redis:       redisClient,
+        log:         log,
+    }
 }
 
-// GetAvailableShelves возвращает полки с достаточной свободной ёмкостью
-// Формула: I_shelf = W1*P_level + W2*P_priority - W3*ST_Distance(...)
+// ShelfEntity внутренняя модель полки
+type ShelfEntity struct {
+    ID           string
+    RackID       string
+    Level        int
+    Priority     float64
+    MaxCapacity  float64
+    UsedCapacity float64
+}
+
+// GetAvailableShelves возвращает полки с местом, гарантируя изоляцию SKU (на полке только 1 товар)
 func (r *ShelfRepo) GetAvailableShelves(
-	ctx context.Context,
-	requiredCapacity float64,
-	productTags []string,
-	warehouseID string,
-	weights map[string]float64,
-) ([]*domain.Shelf, error) {
-	// Фильтр совместимости тегов: полка разрешает ВСЕ теги товара ИЛИ не имеет ограничений
-	tagCondition := `
-		(COALESCE(s.compatible_tags, ARRAY[]::text[]) = ARRAY[]::text[] 
-		OR s.compatible_tags @> $3::text[])
-	`
+    ctx context.Context,
+    requiredCapacity float64,
+    productID string,
+) ([]*ShelfEntity, error) {
+    query := `
+        SELECT 
+            s.id::text, s.rack_id::text, s.level, s.priority, 
+            s.max_capacity, s.used_capacity
+        FROM shelf s
+        WHERE (s.max_capacity - s.used_capacity) >= $1
+          AND NOT EXISTS (
+              SELECT 1 FROM shelf_product sp 
+              WHERE sp.shelf_id = s.id AND sp.product_id::text != $2
+          )
+        ORDER BY s.priority DESC, s.level ASC
+        LIMIT 100
+    `
 
-	// Важно: параметры запроса должны соответствовать порядку $1, $2, $3
-	query := fmt.Sprintf(`
-		SELECT 
-			s.id, s.rack_id, s.level, s.priority, 
-			s.max_capacity, s.used_capacity,
-			ST_AsEWKB(s.location) as location_ewkb,
-			s.compatible_tags
-		FROM shelf s
-		JOIN rack r ON s.rack_id = r.id
-		WHERE r.warehouse_id = $1
-			AND (s.max_capacity - s.used_capacity) >= $2
-			AND %s
-		ORDER BY s.priority DESC, s.level ASC
-		LIMIT 100
-	`, tagCondition)
+    var shelves []*ShelfEntity
+    conns := r.allReadConn()
 
-	var shelves []*domain.Shelf
-	conns := r.allReadConn()
+    for _, conn := range conns {
+        rows, err := conn.Query(ctx, query, requiredCapacity, productID)
+        if err != nil {
+            r.log.Warn("ошибка запроса полок на шарде", "error", err)
+            continue
+        }
 
-	for _, conn := range conns {
-		rows, err := conn.Query(ctx, query, warehouseID, requiredCapacity, productTags)
-		if err != nil {
-			r.log.Warn("ошибка запроса полок на шарде", "error", err)
-			continue
-		}
+        for rows.Next() {
+            var shelf ShelfEntity
+            err := rows.Scan(
+                &shelf.ID, &shelf.RackID, &shelf.Level, &shelf.Priority,
+                &shelf.MaxCapacity, &shelf.UsedCapacity,
+            )
+            if err != nil {
+                r.log.Warn("ошибка сканирования полки", "error", err)
+                continue
+            }
+            shelves = append(shelves, &shelf)
+        }
+        rows.Close()
+    }
 
-		for rows.Next() {
-			var (
-				shelf        domain.Shelf
-				locationEWKB []byte
-			)
-			err := rows.Scan(
-				&shelf.ID, &shelf.RackID, &shelf.Level, &shelf.Priority,
-				&shelf.MaxCapacity, &shelf.UsedCapacity,
-				&locationEWKB, &shelf.CompatibleTags,
-			)
-			if err != nil {
-				r.log.Warn("ошибка сканирования полки", "error", err)
-				continue
-			}
-
-			// Декодируем PostGIS-геометрию
-			geomObj, err := ewkb.Unmarshal(locationEWKB)
-			if err != nil {
-				r.log.Warn("не удалось декодировать геометрию", "shelf_id", shelf.ID, "error", err)
-				continue
-			}
-
-			// Корректная тип-ассерция для go-geom: *geom.Point
-			if point, ok := geomObj.(*geom.Point); ok {
-				shelf.Location = *point
-			}
-
-			shelves = append(shelves, &shelf)
-		}
-		rows.Close()
-	}
-
-	return shelves, nil
+    return shelves, nil
 }
 
-// ReserveCapacity атомарно резервирует место на полке (SELECT FOR UPDATE)
-// Использует явный Begin/Commit/Rollback для совместимости
-func (r *ShelfRepo) ReserveCapacity(ctx context.Context, shelfID string, capacity float64) error {
-	conn, _ := r.writeConn(shelfID)
-
-	// Явное начало транзакции
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("не удалось начать транзакцию: %w", err)
-	}
-	// Дефер для отката в случае паники или ошибки до Commit
-	defer func() {
-		if tx != nil {
-			_ = tx.Rollback(ctx) // Rollback после Commit — no-op
-		}
-	}()
-
-	// Блокируем строку полки
-	var currentUsed float64
-	err = tx.QueryRow(ctx,
-		"SELECT used_capacity FROM shelf WHERE id = $1 FOR UPDATE",
-		shelfID,
-	).Scan(&currentUsed)
-	if err != nil {
-		return fmt.Errorf("не удалось заблокировать полку: %w", err)
-	}
-
-	// Получаем максимальную ёмкость
-	var maxCap float64
-	err = tx.QueryRow(ctx,
-		"SELECT max_capacity FROM shelf WHERE id = $1",
-		shelfID,
-	).Scan(&maxCap)
-	if err != nil {
-		return fmt.Errorf("не удалось получить ёмкость полки: %w", err)
-	}
-
-	// Проверка доступного места
-	if currentUsed+capacity > maxCap {
-		return fmt.Errorf("недостаточно места: требуется %.2f, доступно %.2f",
-			capacity, maxCap-currentUsed)
-	}
-
-	// Обновляем used_capacity
-	_, err = tx.Exec(ctx,
-		"UPDATE shelf SET used_capacity = used_capacity + $1 WHERE id = $2",
-		capacity, shelfID,
-	)
-	if err != nil {
-		return fmt.Errorf("ошибка обновления ёмкости: %w", err)
-	}
-
-	// Коммит транзакции
-	if err = tx.Commit(ctx); err != nil {
-		return fmt.Errorf("ошибка коммита транзакции: %w", err)
-	}
-	tx = nil // Отключаем defer-rollback после успешного коммита
-
-	r.log.Debug("ёмкость зарезервирована",
-		"shelf_id", shelfID,
-		"capacity", capacity,
-		"new_used", currentUsed+capacity)
-
-	return nil
+// GetProductVolume возвращает объем товара по его ID (нужен для оптимизатора)
+func (r *ShelfRepo) GetProductVolume(ctx context.Context, productID string) (float64, error) {
+    conn, _ := r.readConn(productID)
+    var volume float64
+    
+    err := conn.QueryRow(ctx, "SELECT COALESCE(volume, 0) FROM product WHERE id = $1", productID).Scan(&volume)
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return 0, ErrProductNotFound
+        }
+        return 0, fmt.Errorf("ошибка получения объема товара: %w", err)
+    }
+    
+    return volume, nil
 }
 
-// CheckTagCompatibility проверяет совместимость тегов товара и полки
-func (r *ShelfRepo) CheckTagCompatibility(ctx context.Context, shelfID string, productTags []string) (bool, error) {
-	conn, _ := r.readConn(shelfID)
+// AllocateProduct размещает товар на конкретной полке с глобальной блокировкой
+func (r *ShelfRepo) AllocateProduct(ctx context.Context, shelfID, productID string, quantity int) error {
+    mutexKey := fmt.Sprintf("shelf_lock:%s", shelfID)
+    lockTTL := 5 * time.Second
 
-	var allowedTags []string
-	err := conn.QueryRow(ctx,
-		"SELECT compatible_tags FROM shelf WHERE id = $1",
-		shelfID,
-	).Scan(&allowedTags)
-	if err != nil {
-		return false, fmt.Errorf("не удалось получить теги полки: %w", err)
-	}
+    acquired, err := r.redis.SetNX(ctx, mutexKey, "locked", lockTTL).Result()
+    if err != nil {
+        return fmt.Errorf("ошибка проверки блокировки полки: %w", err)
+    }
+    if !acquired {
+        return ErrShelfLocked
+    }
+    
+    defer func() {
+        luaScript := redis.NewScript(`
+            if redis.call("get", KEYS[1]) == ARGV[1] then
+                return redis.call("del", KEYS[1])
+            else
+                return 0
+            end
+        `)
+        luaScript.Run(context.Background(), r.redis, []string{mutexKey}, "locked")
+    }()
 
-	// Пустой список = все теги разрешены
-	if len(allowedTags) == 0 {
-		return true, nil
-	}
+    conn, _ := r.writeConn(productID)
 
-	// Строгая проверка: полка должна разрешать ВСЕ теги товара
-	tagSet := make(map[string]bool, len(allowedTags))
-	for _, tag := range allowedTags {
-		tagSet[tag] = true
-	}
+    tx, err := conn.Begin(ctx)
+    if err != nil {
+        return fmt.Errorf("не удалось начать транзакцию: %w", err)
+    }
+    defer func() {
+        if tx != nil {
+            _ = tx.Rollback(ctx)
+        }
+    }()
 
-	for _, pTag := range productTags {
-		if !tagSet[pTag] {
-			r.log.Debug("несовместимость тегов",
-				"shelf_id", shelfID,
-				"rejected_tag", pTag,
-				"allowed_tags", allowedTags)
-			return false, nil
-		}
-	}
+    var maxCap, usedCap float64
+    err = tx.QueryRow(ctx,
+        "SELECT max_capacity, used_capacity FROM shelf WHERE id = $1 FOR UPDATE",
+        shelfID,
+    ).Scan(&maxCap, &usedCap)
+    if err != nil {
+        return fmt.Errorf("полка не найдена: %w", err)
+    }
 
-	return true, nil
+    var volume float64
+    err = tx.QueryRow(ctx,
+        "SELECT COALESCE(volume, 0) FROM product WHERE id = $1",
+        productID,
+    ).Scan(&volume)
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return ErrProductNotFound
+        }
+        return fmt.Errorf("ошибка получения товара: %w", err)
+    }
+
+    requiredCap := float64(quantity) * volume
+    if usedCap+requiredCap > maxCap {
+        return ErrNoSpace
+    }
+
+    _, err = tx.Exec(ctx, `
+        INSERT INTO shelf_product (shelf_id, product_id, quantity) 
+        VALUES ($1, $2, $3) 
+        ON CONFLICT (shelf_id, product_id) DO UPDATE SET quantity = shelf_product.quantity + $3
+    `, shelfID, productID, quantity)
+
+    if err != nil {
+        return fmt.Errorf("ошибка размещения товара: %w", err)
+    }
+
+    if err = tx.Commit(ctx); err != nil {
+        return fmt.Errorf("ошибка коммита: %w", err)
+    }
+    tx = nil
+
+    return nil
+}
+
+// AutoAddStock распределяет товар с учетом изоляции (каждому товару своя полка)
+func (r *ShelfRepo) AutoAddStock(ctx context.Context, productID string, quantity int) (*dto.AutoStockResponse, error) {
+    conn, _ := r.readConn(productID)
+    var volume float64
+    if err := conn.QueryRow(ctx, "SELECT COALESCE(volume, 0) FROM product WHERE id = $1", productID).Scan(&volume); err != nil {
+        if err == pgx.ErrNoRows {
+            return nil, ErrProductNotFound
+        }
+        return nil, err
+    }
+
+    if volume == 0 {
+        return nil, ErrNoVolume
+    }
+
+    shelves, err := r.GetAvailableShelves(ctx, volume, productID)
+    if err != nil || len(shelves) == 0 {
+        return nil, ErrNoSpace
+    }
+
+    resp := &dto.AutoStockResponse{
+        ProductID:      productID,
+        TotalRequested: quantity,
+    }
+
+    remaining := quantity
+
+    for _, currentShelf := range shelves {
+        if remaining <= 0 {
+            break
+        }
+
+        freeSpace := currentShelf.MaxCapacity - currentShelf.UsedCapacity
+        if freeSpace <= 0 {
+            continue
+        }
+
+        fitQty := int(freeSpace / volume)
+        if fitQty <= 0 {
+            continue
+        }
+
+        actualQty := remaining
+        if fitQty < remaining {
+            actualQty = fitQty
+        }
+
+        err := r.AllocateProduct(ctx, currentShelf.ID, productID, actualQty)
+        if err == nil {
+            var newQty int
+            var newUsedCap float64
+            conn.QueryRow(ctx, `SELECT quantity FROM shelf_product WHERE shelf_id = $1 AND product_id = $2`, currentShelf.ID, productID).Scan(&newQty)
+            conn.QueryRow(ctx, `SELECT used_capacity FROM shelf WHERE id = $1`, currentShelf.ID).Scan(&newUsedCap)
+
+            resp.Results = append(resp.Results, &dto.StockResponse{
+                ShelfID:      currentShelf.ID,
+                ProductID:    productID,
+                NewQuantity:  newQty,
+                UsedCapacity: newUsedCap,
+                MaxCapacity:  currentShelf.MaxCapacity,
+                Message:      fmt.Sprintf("размещено %d шт. (стеллаж %s, ур. %d). Занято: %.3f м³ из %.1f м³", actualQty, currentShelf.RackID, currentShelf.Level, newUsedCap, currentShelf.MaxCapacity),
+            })
+            remaining -= actualQty
+        } else if err == ErrNoSpace || err == ErrShelfLocked {
+            continue
+        } else {
+            return nil, err
+        }
+    }
+
+    resp.TotalPlaced = quantity - remaining
+
+    if resp.TotalPlaced == 0 {
+        return nil, ErrNoSpace
+    }
+
+    if remaining > 0 {
+        resp.Message = fmt.Sprintf("⚠️ Склад заполнен (нет пустых или своих полок)! Размещено %d из %d. Не хватило места для %d шт.", resp.TotalPlaced, quantity, remaining)
+    } else {
+        resp.Message = "✅ Весь товар успешно распределен по полкам"
+    }
+
+    return resp, nil
+}
+
+// WithdrawStock списание товара с конкретной полки
+func (r *ShelfRepo) WithdrawStock(ctx context.Context, shelfID, productID string, quantity int) (*dto.StockResponse, error) {
+    mutexKey := fmt.Sprintf("shelf_lock:%s", shelfID)
+    acquired, err := r.redis.SetNX(ctx, mutexKey, "locked", 5*time.Second).Result()
+    if err != nil {
+        return nil, fmt.Errorf("ошибка проверки блокировки: %w", err)
+    }
+    if !acquired {
+        return nil, ErrShelfLocked
+    }
+    defer func() {
+        luaScript := redis.NewScript(`
+            if redis.call("get", KEYS[1]) == ARGV[1] then
+                return redis.call("del", KEYS[1])
+            else
+                return 0
+            end
+        `)
+        luaScript.Run(context.Background(), r.redis, []string{mutexKey}, "locked")
+    }()
+
+    conn, _ := r.writeConn(productID)
+
+    tx, err := conn.Begin(ctx)
+    if err != nil {
+        return nil, err
+    }
+    defer func() {
+        if tx != nil {
+            _ = tx.Rollback(ctx)
+        }
+    }()
+
+    var currentQty int
+    err = tx.QueryRow(ctx, `
+        SELECT quantity FROM shelf_product 
+        WHERE shelf_id = $1 AND product_id = $2 FOR UPDATE
+    `, shelfID, productID).Scan(&currentQty)
+
+    if err != nil {
+        if err == pgx.ErrNoRows {
+            return nil, ErrNotEnoughStock
+        }
+        return nil, err
+    }
+
+    if currentQty < quantity {
+        return nil, ErrNotEnoughStock
+    }
+
+    newQty := currentQty - quantity
+    if newQty == 0 {
+        _, err = tx.Exec(ctx, "DELETE FROM shelf_product WHERE shelf_id = $1 AND product_id = $2", shelfID, productID)
+    } else {
+        _, err = tx.Exec(ctx, "UPDATE shelf_product SET quantity = $1 WHERE shelf_id = $2 AND product_id = $3", newQty, shelfID, productID)
+    }
+    if err != nil {
+        return nil, err
+    }
+
+    var newUsedCap float64
+    tx.QueryRow(ctx, "SELECT used_capacity FROM shelf WHERE id = $1", shelfID).Scan(&newUsedCap)
+
+    if err = tx.Commit(ctx); err != nil {
+        return nil, err
+    }
+    tx = nil
+
+    return &dto.StockResponse{
+        ShelfID:      shelfID,
+        ProductID:    productID,
+        NewQuantity:  newQty,
+        UsedCapacity: newUsedCap,
+        Message:      "успешно списано",
+    }, nil
 }

@@ -2,22 +2,28 @@ package dto
 
 // OptimizeRequest — запрос на оптимизацию размещения
 type OptimizeRequest struct {
-	ProductIDs  []string `json:"product_ids"`   // Список ID товаров для оптимизации
-	WarehouseID string   `json:"warehouse_id"`  // ID склада
-	DryRun      bool     `json:"dry_run"`       // Если true — только расчёт, без записи в БД
+    Items  []OptimizeItem `json:"items"` // Список товаров с количеством
+    DryRun bool           `json:"dry_run"` // Если true — только расчёт, без записи в БД
+}
+
+// OptimizeItem — товар для оптимизации
+type OptimizeItem struct {
+    ProductID string `json:"product_id"`
+    Quantity  int    `json:"quantity"`
 }
 
 // OptimizeResponse — ответ с результатами оптимизации
 type OptimizeResponse struct {
-	Results []AllocationResult `json:"results"`
-	Message string             `json:"message,omitempty"`
+    Results []AllocationResult `json:"results"`
+    Message string             `json:"message,omitempty"`
 }
 
 // AllocationResult — результат размещения одного товара
 type AllocationResult struct {
-	ProductID string  `json:"product_id"`
-	ShelfID   string  `json:"shelf_id,omitempty"`
-	Score     float64 `json:"score,omitempty"`
-	Assigned  bool    `json:"assigned"`
-	Reason    string  `json:"reason"`
+    ProductID string  `json:"product_id"`
+    ShelfID   string  `json:"shelf_id,omitempty"`
+    Quantity  int     `json:"quantity,omitempty"`
+    Score     float64 `json:"score,omitempty"`
+    Assigned  bool    `json:"assigned"`
+    Reason    string  `json:"reason"`
 }

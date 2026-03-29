@@ -1,0 +1,22 @@
+include:
+  - geo_pgadmin/compose.geo_pgadmin.yml
+  - infra/nginx/compose.nginx.yml
+  - infra/redis/compose.redis.yml
+  - infra/storage/compose.yml
+  - infra/zookeeper/compose.zookeeper.yml
+
+services:  
+  warehouse:
+    build:
+      context: ./warehouse
+      dockerfile: Dockerfile
+    ports:
+      - "8080"
+    networks:
+      - qwik-network
+    deploy:
+      replicas: 4
+
+networks:
+  qwik-network:
+    driver: bridge
