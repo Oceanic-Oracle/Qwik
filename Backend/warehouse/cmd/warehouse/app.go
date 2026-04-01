@@ -15,11 +15,15 @@ import (
 type MockTurnoverProvider struct{}
 
 func (m *MockTurnoverProvider) GetTurnoverRate(productID string) (float64, error) {
-    return 50.0, nil // заглушка
+    hash := 0
+    for i := 0; i < len(productID); i++ {
+        hash = int(productID[i]) + ((hash << 5) - hash)
+    }
+    return 10.0 + float64((hash%100)), nil
 }
 
 func (m *MockTurnoverProvider) GetDemandVariability(productID string) (float64, error) {
-    return 0.25, nil // заглушка
+    return 0.25, nil
 }
 
 func main() {
@@ -27,14 +31,10 @@ func main() {
     log := pkg.SetupLogger(cfg.Env)
 
     pool := pkg.GetPgConnectionPool(cfg.PgStorage, log)
-    
-    // ИНИЦИАЛИЗАЦИЯ REDIS
     redisClient := pkg.GetRedisConnectionPool(cfg.RedisStorage, log)
 
-    // Передаем Redis в репозиторий для распределенных блокировок
     rep := repo.NewRepo(pool, redisClient, log)
 
-    // Инициализация сервиса оптимизации
     optimizer := service.NewOptimizationService(
         rep.Shelf,
         cfg.Optimizer,

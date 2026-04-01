@@ -2,9 +2,10 @@ package service
 
 import (
     "context"
+    "errors"
+    "fmt"
     "log/slog"
     "sort"
-    "sync"
 
     "warehouse/internal/config"
     "warehouse/internal/domain"
@@ -37,25 +38,50 @@ func (s *OptimizationService) OptimizeAllocations(
     ctx context.Context,
     items []dto.OptimizeItem,
 ) ([]*domain.AllocationResult, error) {
-    s.log.Info("запуск оптимизации", "items_count", len(items))
+    s.log.Info("запуск ABC/XYZ оптимизации", "items_count", len(items))
 
     products := make([]*domain.Product, len(items))
     for i, item := range items {
         products[i] = &domain.Product{
             ID:   item.ProductID,
-            Tags: []string{"general"}, 
+            Tags: []string{"general"},
         }
         rate, _ := s.turnover.GetTurnoverRate(item.ProductID)
         cv, _ := s.turnover.GetDemandVariability(item.ProductID)
         products[i].TurnoverRate = rate
         products[i].DemandCV = cv
-    }
-    s.ClassifyProducts(products)
 
-    results := s.allocateItems(ctx, products, items)
+        vol, _ := s.shelfRepo.GetProductVolume(ctx, item.ProductID)
+        products[i].AllocatedCapacity = vol
+    }
+
+    s.ClassifyProducts(products)
+    results := s.allocateItemsSequentially(ctx, products, items)
 
     s.log.Info("оптимизация завершена", "allocated", countAllocated(results), "total", len(results))
     return results, nil
+}
+
+func (s *OptimizationService) OptimizeAllAllocations(ctx context.Context) ([]*domain.AllocationResult, error) {
+    s.log.Info("запуск ГЛОБАЛЬНОЙ перестройки склада")
+
+    items, err := s.shelfRepo.GetStockedItems(ctx)
+    if err != nil {
+        return nil, fmt.Errorf("не удалось получить список товаров: %w", err)
+    }
+
+    if len(items) == 0 {
+        s.log.Info("склад уже пуст, нечего оптимизировать")
+        return []*domain.AllocationResult{}, nil
+    }
+
+    if err := s.shelfRepo.ClearWarehouseForOptimization(ctx); err != nil {
+        return nil, fmt.Errorf("не удалось очистить склад: %w", err)
+    }
+    
+    s.log.Info("склад очищен, начинаем расчет ABC/XYZ", "items_to_place", len(items))
+
+    return s.OptimizeAllocations(ctx, items)
 }
 
 func (s *OptimizationService) ClassifyProducts(products []*domain.Product) {
@@ -70,6 +96,11 @@ func (s *OptimizationService) ClassifyProducts(products []*domain.Product) {
         values[i] = productValue{prod: p, value: val}
         totalValue += val
     }
+
+    if totalValue == 0 {
+        totalValue = 1
+    }
+
     sort.Slice(values, func(i, j int) bool { return values[i].value > values[j].value })
     cumulative := 0.0
     for i := range values {
@@ -93,101 +124,140 @@ func (s *OptimizationService) ClassifyProducts(products []*domain.Product) {
     }
 }
 
-func (s *OptimizationService) CalculateScore(product *domain.Product, level int, priority float64, maxShelfLevel int) float64 {
-    levelScore := float64(maxShelfLevel-level+1) / float64(maxShelfLevel)
-    score := s.cfg.WeightLevel*levelScore + s.cfg.WeightPriority*priority 
-    if product.ABCClass == domain.ClassA && score > 0.7 {
-        score *= 1.2
+func (s *OptimizationService) calculateSlottingScore(p *domain.Product) float64 {
+    abcScore := 0.0
+    switch p.ABCClass {
+    case domain.ClassA: abcScore = 100.0
+    case domain.ClassB: abcScore = 50.0
+    case domain.ClassC: abcScore = 0.0
     }
-    return score
+
+    xyzScore := 0.0
+    switch p.XYZClass {
+    case domain.ClassZ: xyzScore = 100.0
+    case domain.ClassY: xyzScore = 50.0
+    case domain.ClassX: xyzScore = 0.0
+    }
+
+    return (s.cfg.WeightPriority * abcScore) + (s.cfg.WeightLevel * xyzScore)
 }
 
-func (s *OptimizationService) allocateItems(
+func (s *OptimizationService) allocateItemsSequentially(
     ctx context.Context,
     products []*domain.Product,
     items []dto.OptimizeItem,
 ) []*domain.AllocationResult {
-    results := make([]*domain.AllocationResult, 0, len(items))
-    maxLevel := 5 
+    type indexedProduct struct {
+        origIdx int
+        prod    *domain.Product
+        score   float64
+    }
 
-    var mu sync.Mutex
-    var wg sync.WaitGroup
-    sem := make(chan struct{}, 10)
+    scoredProducts := make([]indexedProduct, len(products))
+    for i, p := range products {
+        scoredProducts[i] = indexedProduct{
+            origIdx: i,
+            prod:    p,
+            score:   s.calculateSlottingScore(p),
+        }
+    }
 
-    for i, prod := range products {
-        wg.Add(1)
-        sem <- struct{}{}
+    sort.Slice(scoredProducts, func(i, j int) bool {
+        return scoredProducts[i].score > scoredProducts[j].score
+    })
+
+    results := make([]*domain.AllocationResult, len(items))
+
+    for _, sp := range scoredProducts {
+        qty := items[sp.origIdx].Quantity
+        result := &domain.AllocationResult{
+            ProductID: sp.prod.ID,
+            Assigned:  false,
+        }
+
+        volume, err := s.shelfRepo.GetProductVolume(ctx, sp.prod.ID)
+        if err != nil || volume == 0 {
+            s.log.Warn("нельзя разместить товар без объема", "product_id", sp.prod.ID, "error", err)
+            result.Reason = "product_has_no_volume_or_not_found"
+            results[sp.origIdx] = result
+            continue
+        }
+
+        // ИСПРАВЛЕНИЕ: Ищем полки с минимальным порогом (чтобы влезла хотя бы 1 шт)
+        minReqCap := volume 
+        shelves, err := s.shelfRepo.GetShelvesForOptimization(ctx, minReqCap)
+        if err != nil || len(shelves) == 0 {
+            result.Reason = "no_shelves_found"
+            results[sp.origIdx] = result
+            continue
+        }
+
+        remaining := qty
+        var firstShelfID string
+        totalPlaced := 0
         
-        go func(idx int, p *domain.Product) {
-            defer wg.Done()
-            defer func() { <-sem }()
-
-            qty := items[idx].Quantity
-            result := &domain.AllocationResult{
-                ProductID: p.ID,
-                Assigned:  false,
-            }
-
-            volume, err := s.shelfRepo.GetProductVolume(ctx, p.ID)
-            if err != nil || volume == 0 {
-                s.log.Warn("нельзя разместить товар без объема", "product_id", p.ID, "error", err)
-                result.Reason = "product_has_no_volume_or_not_found"
-                mu.Lock()
-                results = append(results, result)
-                mu.Unlock()
-                return
-            }
-
-            requiredCapacity := float64(qty) * volume
-            
-            // ИСПРАВЛЕНО: Ищем полки под конкретный товар, чтобы не смешивать SKU
-            shelves, err := s.shelfRepo.GetAvailableShelves(ctx, requiredCapacity, p.ID)
-            if err != nil || len(shelves) == 0 {
-                result.Reason = "no_shelves_found"
-                mu.Lock()
-                results = append(results, result)
-                mu.Unlock()
-                return
-            }
-
-            type scoredShelf struct {
-                shelf *shelf.ShelfEntity
-                score float64
-            }
-            scored := make([]scoredShelf, 0, len(shelves))
-            for _, sh := range shelves {
-                score := s.CalculateScore(p, sh.Level, sh.Priority, maxLevel)
-                scored = append(scored, scoredShelf{shelf: sh, score: score})
-            }
-            sort.Slice(scored, func(i, j int) bool { return scored[i].score > scored[j].score })
-
-            for _, candidate := range scored {
-                err := s.shelfRepo.AllocateProduct(ctx, candidate.shelf.ID, p.ID, qty)
-                if err != nil {
-                    s.log.Debug("резервирование не удалось", "product_id", p.ID, "shelf_id", candidate.shelf.ID, "error", err)
-                    continue 
-                }
-                result.ShelfID = candidate.shelf.ID
-                result.Score = candidate.score
-                result.Assigned = true
-                result.Reason = "allocated"
+        // ИСПРАВЛЕНИЕ: Идем по полкам и дробим партию, пока не разложим весь товар
+        for _, candidate := range shelves {
+            if remaining <= 0 {
                 break
             }
 
-            if !result.Assigned && result.Reason == "" {
-                result.Reason = "no_compatible_shelf_with_space"
+            // Локально вычисляем свободное место (обновляем в памяти, чтобы не делать запросы в БД)
+            freeSpace := candidate.MaxCapacity - candidate.UsedCapacity
+            if freeSpace <= 0 {
+                continue
             }
-            mu.Lock()
-            results = append(results, result)
-            mu.Unlock()
-        }(i, prod)
+
+            fitQty := int(freeSpace / volume)
+            if fitQty <= 0 {
+                continue
+            }
+
+            actualQty := remaining
+            if fitQty < remaining {
+                actualQty = fitQty
+            }
+
+            err := s.shelfRepo.AllocateProduct(ctx, candidate.ID, sp.prod.ID, actualQty)
+            if err == nil {
+                if firstShelfID == "" {
+                    firstShelfID = candidate.ID
+                }
+                remaining -= actualQty
+                totalPlaced += actualQty
+                
+                // Обновляем локальное состояние полки
+                candidate.UsedCapacity += float64(actualQty) * volume
+            } else {
+                s.log.Debug("ошибка размещения части товара", "shelf_id", candidate.ID, "error", err)
+                if errors.Is(err, shelf.ErrNoSpace) {
+                    continue
+                }
+                break 
+            }
+        }
+
+        if remaining == 0 {
+            result.ShelfID = firstShelfID
+            result.Score = sp.score
+            result.Assigned = true
+            result.Reason = fmt.Sprintf("assigned_by_abc_xyz_score_%.1f", sp.score)
+        } else {
+            result.Reason = fmt.Sprintf("no_compatible_shelf_with_space (placed %d out of %d)", totalPlaced, qty)
+        }
+
+        results[sp.origIdx] = result
     }
-    wg.Wait()
+
     return results
 }
 
 func countAllocated(results []*domain.AllocationResult) int {
     count := 0
-    for _, r := range results { if r.Assigned { count++ } }
+    for _, r := range results {
+        if r.Assigned {
+            count++
+        }
+    }
     return count
 }

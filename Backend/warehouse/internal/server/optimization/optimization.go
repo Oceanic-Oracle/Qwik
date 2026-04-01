@@ -1,13 +1,13 @@
 package optimization
 
 import (
-    "context"
-    "encoding/json"
-    "log/slog"
-    "net/http"
-    "time"
-    "warehouse/internal/dto"
-    "warehouse/internal/service"
+	"context"
+	"encoding/json"
+	"log/slog"
+	"net/http"
+	"time"
+	"warehouse/internal/dto"
+	"warehouse/internal/service"
 )
 
 func OptimizeHandler(svc *service.OptimizationService, log *slog.Logger) http.HandlerFunc {
@@ -20,22 +20,13 @@ func OptimizeHandler(svc *service.OptimizationService, log *slog.Logger) http.Ha
         ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
         defer cancel()
 
-        var req dto.OptimizeRequest
+        var req struct {
+            Items  []dto.OptimizeItem `json:"items"`
+            DryRun bool                `json:"dry_run"`
+        }
         if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
             http.Error(w, "Invalid request body", http.StatusBadRequest)
             return
-        }
-
-        if len(req.Items) == 0 {
-            http.Error(w, "items are required", http.StatusBadRequest)
-            return
-        }
-
-        for _, item := range req.Items {
-            if item.Quantity <= 0 {
-                http.Error(w, "quantity must be > 0", http.StatusBadRequest)
-                return
-            }
         }
 
         results, err := svc.OptimizeAllocations(ctx, req.Items)
@@ -45,23 +36,31 @@ func OptimizeHandler(svc *service.OptimizationService, log *slog.Logger) http.Ha
             return
         }
 
-        response := dto.OptimizeResponse{Results: make([]dto.AllocationResult, len(results))}
-        for i, res := range results {
-            response.Results[i] = dto.AllocationResult{
-                ProductID: res.ProductID,
-                ShelfID:   res.ShelfID,
-                Assigned:  res.Assigned,
-                Reason:    res.Reason,
-                Score:     res.Score,
-            }
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(results)
+    }
+}
+
+func OptimizeAllHandler(svc *service.OptimizationService, log *slog.Logger) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if r.Method != http.MethodPost {
+            http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+            return
         }
 
-        if req.DryRun {
-            response.Message = "dry run mode: no changes applied"
+        ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+        defer cancel()
+
+        log.Info("Запущен глобальный рефакторинг склада...")
+        results, err := svc.OptimizeAllAllocations(ctx)
+        if err != nil {
+            log.Error("ошибка глобальной оптимизации", "error", err)
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
         }
 
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusOK)
-        json.NewEncoder(w).Encode(response)
+        json.NewEncoder(w).Encode(results)
     }
 }

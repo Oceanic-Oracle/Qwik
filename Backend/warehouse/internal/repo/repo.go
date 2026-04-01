@@ -34,12 +34,18 @@ func NewRepo(connPool *pkg.ConnectionPool, redisClient *redis.Client, log *slog.
         }
         return conns
     }
+    allWriteConn := func() []*pgxpool.Pool {
+        conns := make([]*pgxpool.Pool, 0, len(*connPool))
+        for _, val := range *connPool {
+            conns = append(conns, val.WriteNode)
+        }
+        return conns
+    }
 
     return &Repo{
         Product: product.NewProduct(writeConn, readConn, allReadConn, log),
         Review:  review.NewReview(writeConn, readConn, allReadConn, log),
-        // ИСПРАВЛЕНИЕ: Передаем Redis-клиент в репо полок
-        Shelf:   shelf.NewShelfRepo(writeConn, readConn, allReadConn, redisClient, log),
+        Shelf:   shelf.NewShelfRepo(writeConn, readConn, allReadConn, allWriteConn, redisClient, log),
     }
 }
 

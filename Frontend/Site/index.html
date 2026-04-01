@@ -13,19 +13,19 @@
             min-height: 100vh;
             padding: 20px;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container { max-width: 1600px; margin: 0 auto; }
         header { background: white; padding: 20px 30px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
         header h1 { color: #333; font-size: 2em; margin-bottom: 5px; }
         header p { color: #666; font-size: 0.9em; }
         .ping-badge { display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
         .ping-badge.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .ping-badge.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px; }
         .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
         .card:hover { transform: translateY(-5px); }
-        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.5em; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; display: flex; align-items: center; }
-        .card h2 i { margin-right: 10px; color: #667eea; }
-        .info-tooltip-container { position: relative; display: inline-flex; align-items: center; margin-left: 10px; cursor: help; }
+        .card h2 { color: #333; margin-bottom: 20px; font-size: 1.5em; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .card h2 i { color: #667eea; }
+        .info-tooltip-container { position: relative; display: inline-flex; align-items: center; cursor: help; }
         .info-tooltip-icon { width: 22px; height: 22px; border-radius: 50%; background: #e0e0e0; color: #555; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-style: italic; font-weight: bold; transition: all 0.2s; }
         .info-tooltip-container:hover .info-tooltip-icon { background: #667eea; color: white; }
         .info-tooltip-text { visibility: hidden; opacity: 0; width: 340px; background: #333; color: #fff; text-align: left; border-radius: 10px; padding: 15px; position: absolute; z-index: 100; top: 130%; left: 50%; transform: translateX(-50%); transition: opacity 0.3s; font-size: 0.9em; line-height: 1.5; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-style: normal; font-weight: normal; }
@@ -122,14 +122,7 @@
         .tab.active { background: #667eea; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .optimization-params { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-        .checkbox-group input[type="checkbox"] { width: auto; }
-        .toast { position: fixed; top: 20px; right: 20px; padding: 15px 25px; background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; z-index: 1000; }
-        .toast.success { border-left: 4px solid #28a745; }
-        .toast.error { border-left: 4px solid #dc3545; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .results-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .results-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; }
         .results-table th { background: #f0f0f0; padding: 10px; text-align: left; }
         .results-table td { padding: 10px; border-bottom: 1px solid #e0e0e0; }
         .badge-success { background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; }
@@ -138,6 +131,23 @@
         .size-input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-top: 10px; }
         .size-input-group .form-group { margin-bottom: 0; }
         .auto-calc-hint { font-size: 0.8em; color: #666; margin-top: 5px; display: block; }
+        .toast { position: fixed; top: 20px; right: 20px; padding: 15px 25px; background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; z-index: 1000; white-space: pre-line; max-width: 450px; }
+        .toast.success { border-left: 4px solid #28a745; }
+        .toast.error { border-left: 4px solid #dc3545; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .right-panel-btn { font-size: 1.2em; padding: 20px; margin-bottom: 20px; border-radius: 12px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+        .right-panel-btn:hover { box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4); }
+        .warehouse-floor { background: #e9ecef; border-radius: 10px; padding: 20px; min-height: 300px; position: relative; border: 2px dashed #ced4da; }
+        .aisle-container { display: flex; gap: 40px; justify-content: space-around; flex-wrap: wrap; }
+        .rack-unit { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .rack-label { font-weight: bold; color: #495057; margin-bottom: 10px; background: white; padding: 5px 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .shelves-column { display: flex; flex-direction: column-reverse; gap: 4px; }
+        .shelf-box { width: 160px; height: 55px; border: 2px solid #adb5bd; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); position: relative; transition: all 0.3s ease; text-align: center; padding: 2px; }
+        .shelf-box.empty { background: #f8f9fa; color: #6c757d; border-style: dashed; text-shadow: none; }
+        .shelf-box .tooltip { visibility: hidden; background: #333; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 10; bottom: 115%; left: 50%; transform: translateX(-50%); width: 220px; font-size: 0.85em; font-weight: normal; text-shadow: none; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .shelf-box .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
+        .shelf-box:hover .tooltip { visibility: visible; }
+        .shelf-box .level-badge { position: absolute; top: 2px; left: 4px; font-size: 0.7em; opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -185,7 +195,10 @@
                                 </div>
                                 <small class="auto-calc-hint">📐 Объем будет рассчитан автоматически (в м³)</small>
                             </div>
-                            <div class="checkbox-group"><input type="checkbox" id="productVisibility" checked><label>Видимый товар</label></div>
+                            <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                                <input type="checkbox" id="productVisibility" checked style="width:auto;">
+                                <label for="productVisibility" style="margin:0;">Видимый товар</label>
+                            </div>
                             <button type="submit">✨ Создать товар</button>
                         </form>
                     </div>
@@ -193,7 +206,7 @@
                         <div class="form-group"><label>ID товара</label><input type="text" id="productDetailId" placeholder="Введите ID товара"></div>
                         <button onclick="loadProductDetail()">🔍 Получить детали</button>
                         <div id="detailContainer" class="detail-container hidden">
-                            <div id="detailButtons" class="button-group">
+                            <div class="button-group">
                                 <button class="button-outline active" onclick="showDetailView('card')" id="detail-view-card">📋 Карточка товара</button>
                                 <button class="button-outline" onclick="showDetailView('json')" id="detail-view-json">🔧 Показать JSON</button>
                             </div>
@@ -206,35 +219,37 @@
 
             <div class="card">
                 <h2>
-                    <i>⚡</i> Оптимизация размещения
+                    <i>⚡</i> Оптимизация склада 
                     <div class="info-tooltip-container">
                         <div class="info-tooltip-icon">i</div>
                         <div class="info-tooltip-text">
-                            <strong>Как работает умное размещение?</strong><br><br>
-                            Система делит все товары на группы по двум признакам:<br>
-                            1. <b>Важность (ABC):</b> "А" — продаются чаще всего (приносят 80% денег), "С" — редкие товары.<br>
-                            2. <b>Предсказуемость (XYZ):</b> "X" — берут стабильно каждый день, "Z" — берут редко и непредсказуемо.<br><br>
-                            Затем алгоритм ищет для товара идеальную полку: самую удобную по высоте и чтобы товар туда влез по размеру. Самые прибыльные товары система старается положить на лучшие места!
+                            <strong>Как работает магическая кнопка?</strong><br><br>
+                            1. Алгоритм собирает ВСЕ товары на складе.<br>
+                            2. Временно убирает их с полок.<br>
+                            3. Высчитывает матрицу важности (ABC по обороту, XYZ по стабильности).<br>
+                            4. "Золотые" товары (AX) ставит на Полку 1 (Низ). "Мусор" (CZ) скидывает на Полку 9 (Верх, Ряд В).<br>
+                            5. Записывает новое расположение.
                         </div>
                     </div>
                 </h2>
-                <form id="optimizeForm" onsubmit="optimizeAllocation(event)">
-                    <div class="form-group">
-                        <label>Товары и количество *</label>
-                        <textarea id="optimizeItems" rows="5" placeholder="Формат: ID_ТОВАРА:КОЛИЧЕСТВО&#10;Например:&#10;PROD001:10&#10;PROD002:5" required style="font-family: monospace;"></textarea>
-                        <small style="color: #666;">Укажите полный UUID товара и желаемое количество для размещения. Каждая пара с новой строки.</small>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" id="tab-optimize" onclick="switchRightTab('right-optimize', this)">ABC/XYZ Рефакторинг</div>
+                        <div class="tab" id="tab-map" onclick="switchRightTab('right-map', this)">Визуальная карта</div>
                     </div>
-                    <div class="optimization-params">
-                        <h3>Параметры оптимизации</h3>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="dryRun">
-                            <label>🧪 Dry Run (только проверка без реального перемещения)</label>
+                    
+                    <div id="right-optimize" class="tab-content active">
+                        <button id="btnOptimizeAll" class="right-panel-btn" onclick="runGlobalOptimization()">🚀 Провести полную перестройку склада</button>
+                        <div id="optimizationResult" class="response-area" style="display:none;"><pre>Ждем действия...</pre></div>
+                    </div>
+
+                    <div id="right-map" class="tab-content">
+                        <div style="display:flex; gap:10px; margin-bottom:15px;">
+                            <button onclick="loadWarehouseMap()" style="background:#667eea; width:auto; padding:10px 15px;">🔄 Обновить</button>
                         </div>
+                        <div id="warehouseMapContainer" class="warehouse-floor"><div style="text-align:center; color: #6c757d; margin: auto; padding: 50px 0;">Нажмите "Обновить"</div></div>
                     </div>
-                    <button type="submit">🚀 Запустить оптимизацию</button>
-                </form>
-                <div id="optimizationResult" class="response-area">
-                    <pre>Результат оптимизации появится здесь...</pre>
                 </div>
             </div>
         </div>
@@ -244,282 +259,213 @@
         const API_BASE = 'http://localhost/warehouse';
         let currentDetailView = 'card', currentProductData = null, currentVisibilityFilter = 'all', currentListView = 'cards', currentProductsData = null, currentRating = 5;
 
-        async function getErrorMessage(res) {
-            const text = await res.text();
-            try {
-                const data = JSON.parse(text);
-                return data.message || data.error || text;
-            } catch {
-                return text;
-            }
-        }
-
-        function calculateVolume() {
-            const w = parseFloat(document.getElementById('productWidth').value) || 0;
-            const h = parseFloat(document.getElementById('productHeight').value) || 0;
-            const d = parseFloat(document.getElementById('productDepth').value) || 0;
-            const volumeCm3 = w * h * d;
-            // ИСПРАВЛЕНО: Перевод из см³ в м³, чтобы соответствовать max_capacity в БД
-            return volumeCm3 > 0 ? (volumeCm3 / 1000000) : null; 
-        }
+        function uuidToColor(uuid) { let hash=0; for(let i=0;i<uuid.length;i++) { hash=uuid.charCodeAt(i)+((hash<<5)-hash); hash=hash&hash; } return `hsl(${Math.abs(hash%360)}, 75%, 45%)`; }
+        async function getErrorMessage(res) { const text = await res.text(); try { return JSON.parse(text).message || text; } catch { return text; } }
+        function calculateVolume() { const w=parseFloat(document.getElementById('productWidth').value)||0, h=parseFloat(document.getElementById('productHeight').value)||0, d=parseFloat(document.getElementById('productDepth').value)||0, v=w*h*d; return v>0 ? v/1000000 : null; }
+        function formatDate(d) { return new Date(d).toLocaleString('ru-RU'); }
+        function escapeHtml(t) { if(!t) return ''; const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+        function renderStars(r) { let s=''; for(let i=1;i<=5;i++) s+=i<=Math.floor(r)?'★':(i-0.5<=r?'½':'☆'); return s; }
+        function renderStarRatingCompact(sel=5) { return `<div class="rating-row" id="starRating"><div class="stars-container">${[1,2,3,4,5].map(i=>`<span class="star ${i<=sel?'selected':''}" onclick="setRating(${i})" onmouseover="hoverStar(${i})" onmouseout="unhoverStar()">★</span>`).join('')}</div><div class="rating-value" id="ratingValue">${sel}/5</div></div>`; }
+        function hoverStar(r) { document.querySelectorAll('.rating-row .star').forEach((s,i)=>s.classList.toggle('hovered',i<r)); }
+        function unhoverStar() { document.querySelectorAll('.rating-row .star').forEach(s=>s.classList.remove('hovered')); }
+        function setRating(r) { currentRating=r; document.querySelectorAll('.rating-row .star').forEach((s,i)=>s.classList.toggle('selected',i<r)); document.getElementById('ratingValue').textContent=`${r}/5`; }
 
         async function checkPing() {
-            const el = document.getElementById('pingStatus');
-            el.innerHTML = '<span class="loading"></span> Проверка...';
-            try {
-                const res = await fetch(`${API_BASE}/ping`, { method: 'GET', mode: 'cors', credentials: 'omit' });
-                if (res.ok) { el.className = 'ping-badge success'; el.innerHTML = '✅ Сервер доступен'; setVisibilityFilter('all'); setTimeout(() => loadProducts(), 500); }
-                else throw new Error('Err');
-            } catch (e) { el.className = 'ping-badge error'; el.innerHTML = '❌ Сервер недоступен'; }
+            const el=document.getElementById('pingStatus'); el.innerHTML='<span class="loading"></span>';
+            try { const res=await fetch(`${API_BASE}/ping`); el.className='ping-badge success'; el.innerHTML='✅ Сервер доступен'; setVisibilityFilter('all'); setTimeout(()=>loadProducts(), 500); }
+            catch(e) { el.className='ping-badge error'; el.innerHTML='❌ Сервер недоступен'; }
         }
 
         function switchTab(tabId) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            // ИСПРАВЛЕНИЕ: Ищем табы только внутри ТЕКУЩЕГО контейнера, чтобы не сбивать правое меню
+            const container = event.target.closest('.tab-container');
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById(tabId).classList.add('active');
             if (tabId === 'products-list') loadProducts();
         }
 
+        function switchRightTab(tabId, element) {
+            const container = element.closest('.tab-container');
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if(tabId === 'right-map') loadWarehouseMap();
+        }
+
         function setVisibilityFilter(filter) {
-            currentVisibilityFilter = filter;
-            ['all', 'true', 'false'].forEach(f => document.getElementById(`filter-${f}`).classList.remove('active'));
+            currentVisibilityFilter=filter;
+            ['all','true','false'].forEach(f=>document.getElementById(`filter-${f}`).classList.remove('active'));
             document.getElementById(`filter-${filter}`).classList.add('active');
             loadProducts();
         }
 
         function setListView(view) {
-            currentListView = view;
-            document.getElementById('view-cards').classList.remove('active');
-            document.getElementById('view-json').classList.remove('active');
+            currentListView=view;
+            document.getElementById('view-cards').classList.remove('active'); document.getElementById('view-json').classList.remove('active');
             document.getElementById(`view-${view}`).classList.add('active');
-            if (currentProductsData) {
-                document.getElementById('productsList').classList.toggle('hidden', view !== 'cards');
-                document.getElementById('productsJson').classList.toggle('hidden', view !== 'json');
-                view === 'cards' ? renderProductsCards(currentProductsData) : renderProductsJson(currentProductsData);
+            if(currentProductsData) {
+                document.getElementById('productsList').classList.toggle('hidden',view!=='cards');
+                document.getElementById('productsJson').classList.toggle('hidden',view!=='json');
+                view==='cards' ? renderProductsCards(currentProductsData) : renderProductsJson(currentProductsData);
             }
         }
 
         function showDetailView(view) {
-            currentDetailView = view;
-            document.getElementById('detail-view-card').classList.toggle('active', view === 'card');
-            document.getElementById('detail-view-json').classList.toggle('active', view === 'json');
-            document.getElementById('productDetailCard').classList.toggle('hidden', view !== 'card');
-            document.getElementById('productDetailJson').classList.toggle('hidden', view !== 'json');
-            if (currentProductData) view === 'card' ? renderProductDetailCard(currentProductData) : renderJsonView(currentProductData, document.getElementById('productDetailJson'));
+            currentDetailView=view;
+            document.getElementById('detail-view-card').classList.toggle('active',view==='card');
+            document.getElementById('detail-view-json').classList.toggle('active',view==='json');
+            document.getElementById('productDetailCard').classList.toggle('hidden',view!=='card');
+            document.getElementById('productDetailJson').classList.toggle('hidden',view!=='json');
+            if(currentProductData) view==='card' ? renderProductDetailCard(currentProductData) : renderJsonView(currentProductData, document.getElementById('productDetailJson'));
         }
-
-        function formatDate(d) { return new Date(d).toLocaleString('ru-RU'); }
-        function escapeHtml(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-        function renderStars(r) { let s = ''; for (let i = 1; i <= 5; i++) s += i <= Math.floor(r) ? '★' : (i - 0.5 <= r ? '½' : '☆'); return s; }
-
-        function renderStarRatingCompact(sel = 5) {
-            return `<div class="rating-row" id="starRating"><div class="stars-container">${[1,2,3,4,5].map(i => `<span class="star ${i <= sel ? 'selected' : ''}" onclick="setRating(${i})" onmouseover="hoverStar(${i})" onmouseout="unhoverStar()">★</span>`).join('')}</div><div class="rating-value" id="ratingValue">${sel}/5</div></div>`;
-        }
-
-        function hoverStar(r) { document.querySelectorAll('.rating-row .star').forEach((s, i) => s.classList.toggle('hovered', i < r)); }
-        function unhoverStar() { document.querySelectorAll('.rating-row .star').forEach(s => s.classList.remove('hovered')); }
-        function setRating(r) { currentRating = r; document.querySelectorAll('.rating-row .star').forEach((s, i) => s.classList.toggle('selected', i < r)); document.getElementById('ratingValue').textContent = `${r}/5`; }
 
         function renderProductsCards(products) {
-            const el = document.getElementById('productsList');
-            if (!products.length) { el.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">📭 Пусто</p>'; return; }
-            el.innerHTML = products.map(p => `
-                <div class="product-card" onclick="showProductDetail('${p.id}')">
-                    <div class="visibility-badge ${p.visibility ? 'visible' : 'hidden'}">${p.visibility ? '👁️ Видимый' : '👻 Скрытый'}</div>
-                    <div class="image-container"><svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div>
-                    <h3>${escapeHtml(p.name)}</h3>
-                    <div class="price">💰 ${p.price} ₽</div>
-                    <div class="reviews">⭐ ${p.avg ? p.avg.toFixed(1) : '0.0'} (${p.count || 0})</div>
-                    <div class="reviews" style="color: #28a745; font-weight: 500;">📦 На складе: ${p.stock_quantity || 0} шт.</div>
-                    <div class="product-id">ID: ${p.id.substring(0, 8)}...</div>
-                </div>`).join('');
+            const el=document.getElementById('productsList');
+            if(!products.length) { el.innerHTML='<p style="text-align:center;color:#666;padding:20px;">📭 Пусто</p>'; return; }
+            el.innerHTML=products.map(p=>`<div class="product-card" onclick="showProductDetail('${p.id}')"><div class="visibility-badge ${p.visibility?'visible':'hidden'}">${p.visibility?'👁️':'👻'}</div><div class="image-container"><svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div><h3>${escapeHtml(p.name)}</h3><div class="price">💰 ${p.price} ₽</div><div class="reviews">⭐ ${p.avg?p.avg.toFixed(1):'0.0'} (${p.count||0})</div><div class="reviews" style="color: #28a745; font-weight: 500;">📦 На складе: ${p.stock_quantity||0} шт.</div><div class="product-id">ID: ${p.id.substring(0,8)}...</div></div>`).join('');
         }
-
         function renderProductsJson(p) { renderJsonView(p, document.getElementById('productsJson')); }
-        function renderJsonView(data, el) { const h = JSON.stringify(data, null, 2).replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => { let c = 'number'; if (/^"/.test(m)) c = /:$/.test(m) ? 'key' : 'string'; else if (/true|false/.test(m)) c = 'boolean'; else if (/null/.test(m)) c = 'null'; return `<span class="${c}">${m}</span>`; }); el.innerHTML = `<pre>${h}</pre>`; }
-
-        function updateFilterCounts(p) { document.getElementById('count-all').textContent = p.length; document.getElementById('count-visible').textContent = p.filter(x => x.visibility).length; document.getElementById('count-hidden').textContent = p.filter(x => !x.visibility).length; }
+        function renderJsonView(data, el) { const h=JSON.stringify(data,null,2).replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m=>{ let c='number'; if(/^"/.test(m))c=/:$/.test(m)?'key':'string'; else if(/true|false/.test(m))c='boolean'; else if(/null/.test(m))c='null'; return `<span class="${c}">${m}</span>`; }); el.innerHTML=`<pre>${h}</pre>`; }
+        function updateFilterCounts(p) { document.getElementById('count-all').textContent=p.length; document.getElementById('count-visible').textContent=p.filter(x=>x.visibility).length; document.getElementById('count-hidden').textContent=p.filter(x=>!x.visibility).length; }
 
         async function loadProducts() {
-            const list = document.getElementById('productsList'), json = document.getElementById('productsJson');
-            list.innerHTML = json.innerHTML = '<div class="loading"></div> Загрузка...';
+            const list=document.getElementById('productsList'), json=document.getElementById('productsJson');
+            list.innerHTML=json.innerHTML='<div class="loading"></div> Загрузка...';
             try {
-                let url = `${API_BASE}/products`; if (currentVisibilityFilter !== 'all') url += `?visibility=${currentVisibilityFilter}`;
-                const res = await fetch(url, { mode: 'cors', credentials: 'omit' }); if (!res.ok) throw new Error(await getErrorMessage(res));
-                const data = await res.json(); currentProductsData = data;
-                const allRes = await fetch(`${API_BASE}/products`, { mode: 'cors', credentials: 'omit' }); if (allRes.ok) updateFilterCounts(await allRes.json());
-                if (currentListView === 'cards') { list.classList.remove('hidden'); json.classList.add('hidden'); renderProductsCards(data); } else { list.classList.add('hidden'); json.classList.remove('hidden'); renderProductsJson(data); }
-            } catch (e) { list.innerHTML = json.innerHTML = `<p style="color:red;padding:20px;">❌ Ошибка</p>`; }
+                let url=`${API_BASE}/products`; if(currentVisibilityFilter!=='all') url+=`?visibility=${currentVisibilityFilter}`;
+                const res=await fetch(url); if(!res.ok) throw new Error(await getErrorMessage(res));
+                const data=await res.json(); currentProductsData=data;
+                const allRes=await fetch(`${API_BASE}/products`); if(allRes.ok) updateFilterCounts(await allRes.json());
+                if(currentListView==='cards') { list.classList.remove('hidden'); json.classList.add('hidden'); renderProductsCards(data); } else { list.classList.add('hidden'); json.classList.remove('hidden'); renderProductsJson(data); }
+            } catch(e) { list.innerHTML=json.innerHTML=`<p style="color:red;padding:20px;">❌ Ошибка</p>`; }
         }
 
-        function showProductDetail(id) { document.getElementById('productDetailId').value = id; document.querySelectorAll('.tab').forEach(t => { if (t.textContent.includes('Детали')) t.click(); }); loadProductDetail(); }
+        function showProductDetail(id) { document.getElementById('productDetailId').value=id; document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Детали')) t.click(); }); loadProductDetail(); }
 
         async function loadProductDetail() {
-            const id = document.getElementById('productDetailId').value; if (!id) return;
+            const id=document.getElementById('productDetailId').value; if(!id)return;
             document.getElementById('detailContainer').classList.add('hidden');
             try {
-                const res = await fetch(`${API_BASE}/product/${id}`, { mode: 'cors', credentials: 'omit' }); if (!res.ok) throw new Error(await getErrorMessage(res));
-                const data = await res.json(); currentProductData = data; document.getElementById('detailContainer').classList.remove('hidden'); showDetailView('card');
-            } catch (e) { showToast(e.message, 'error'); }
+                const res=await fetch(`${API_BASE}/product/${id}`); if(!res.ok) throw new Error(await getErrorMessage(res));
+                const data=await res.json(); currentProductData=data; document.getElementById('detailContainer').classList.remove('hidden'); showDetailView('card'); renderProductDetailCard(data);
+            } catch(e) { showToast(e.message, 'error'); }
         }
 
         function renderProductDetailCard(p) {
-            const revs = p.reviews && p.reviews.length ? p.reviews.map(r => `<div class="review-card"><div class="review-header"><span class="review-author">👤 ${escapeHtml(r.login || 'Аноним')}</span><span class="review-grade"><span class="rating-stars">${renderStars(r.grade)}</span> ${r.grade}.0</span></div><div class="review-date">📅 ${formatDate(r.created_at)}</div><div class="review-text">💬 ${escapeHtml(r.description)}</div></div>`).join('') : '<p style="color:#666;text-align:center;">Нет отзывов</p>';
-            let dims = '';
-            if (p.width || p.height || p.depth || p.weight || p.volume) {
-                dims = `<div class="dimensions-section">${p.width ? `<div class="dimension-item"><div class="dimension-label">📏 Ширина</div><div class="dimension-value">${p.width} см</div></div>` : ''}${p.height ? `<div class="dimension-item"><div class="dimension-label">📐 Высота</div><div class="dimension-value">${p.height} см</div></div>` : ''}${p.depth ? `<div class="dimension-item"><div class="dimension-label">📏 Глубина</div><div class="dimension-value">${p.depth} см</div></div>` : ''}${p.weight ? `<div class="dimension-item"><div class="dimension-label">⚖️ Вес</div><div class="dimension-value">${p.weight} кг</div></div>` : ''}${p.volume ? `<div class="dimension-item"><div class="dimension-label">📦 Объем</div><div class="dimension-value">${p.volume} м³</div></div>` : ''}</div>`;
-            }
-            
-            document.getElementById('productDetailCard').innerHTML = `
-                <div class="product-detail-image-container">
-                    <svg class="product-detail-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg>
-                </div>
-                <div class="product-detail-info">
-                    <h1 class="product-detail-title">${escapeHtml(p.name)}</h1>
-                    <div class="product-detail-price">💰 ${p.price.toLocaleString()} ₽</div>
-                    
-                    <div class="product-detail-meta">
-                        <div class="meta-item"><span>🆔</span><span><code>${p.id}</code></span></div>
-                        <div class="meta-item"><span>⭐</span><span>${p.avg ? p.avg.toFixed(1) : '0.0'}</span></div>
-                        <div class="meta-item" style="color:#28a745; font-weight:bold;"><span>📦</span><span>На складе: ${p.stock_quantity || 0} шт.</span></div>
-                        <div class="meta-item"><span>👁️</span><span>${p.visibility ? 'Видимый' : 'Скрытый'}</span></div>
-                        <div class="meta-item"><span>📅</span><span>${formatDate(p.created_at)}</span></div>
-                    </div>
-                    
-                    ${dims}
-                    
-                    <div class="product-detail-description">
-                        <strong>📄 Описание:</strong><br>
-                        ${escapeHtml(p.description || 'Нет описания')}
-                    </div>
-                    
-                    <div class="stock-section">
-                        <h3>📦 Размещение на складе</h3>
-                        <div class="stock-row">
-                            <div class="form-group">
-                                <label style="font-size:0.9em">Сколько штук разместить?</label>
-                                <input type="number" id="stockQuantity" value="1" min="1">
-                            </div>
-                            <div style="flex: 1.5;">
-                                <button class="btn-success" onclick="handleAutoStock(event, '${p.id}')">🤖 Разместить автоматически</button>
-                            </div>
-                        </div>
-                        
-                        <div class="manual-withdraw-link" onclick="toggleManualWithdraw()">Списать товар с конкретной полки вручную</div>
-                        
-                        <div id="manualWithdrawForm" class="manual-withdraw-form">
-                            <div class="form-group" style="flex:1; min-width:100px;">
-                                <label style="font-size:0.85em">ID Полки</label>
-                                <input type="number" id="withdrawShelfId" placeholder="1" min="1">
-                            </div>
-                            <div class="form-group" style="flex:1; min-width:100px;">
-                                <label style="font-size:0.85em">Кол-во</label>
-                                <input type="number" id="withdrawQty" value="1" min="1">
-                            </div>
-                            <button class="btn-danger btn-small" onclick="handleManualWithdraw(event, '${p.id}')">➖ Списать</button>
-                        </div>
-                    </div>
-
-                    <div class="review-form">
-                        <h3>✍️ Добавить отзыв</h3>
-                        <form onsubmit="addReview(event, '${p.id}')">
-                            <div class="form-group"><label>Текст отзыва *</label><textarea id="reviewDescription" rows="3" required></textarea></div>
-                            <div class="form-group"><label>Оценка *</label>${renderStarRatingCompact(5)}</div>
-                            <div class="form-group"><label>JWT токен (необязательно)</label><input type="text" id="reviewJwt" class="jwt-field" placeholder="eyJhbG..."></div>
-                            <button type="submit">📝 Отправить отзыв</button>
-                        </form>
-                    </div>
-                    
-                    <div class="reviews-section">
-                        <h3 class="reviews-title">📊 Отзывы</h3>
-                        ${revs}
-                    </div>
-                </div>`;
+            const revs=p.reviews&&p.reviews.length?p.reviews.map(r=>`<div class="review-card"><div class="review-header"><span class="review-author">👤 ${escapeHtml(r.login||'Аноним')}</span><span class="review-grade"><span class="rating-stars">${renderStars(r.grade)}</span> ${r.grade}.0</span></div><div class="review-date">📅 ${formatDate(r.created_at)}</div><div class="review-text">💬 ${escapeHtml(r.description)}</div></div>`).join(''):'<p style="color:#666;text-align:center;">Нет отзывов</p>';
+            let dims=''; if(p.width||p.height||p.depth||p.weight||p.volume) { dims=`<div class="dimensions-section">${p.width?`<div class="dimension-item"><div class="dimension-label">📏 Ширина</div><div class="dimension-value">${p.width} см</div></div>`:''}${p.height?`<div class="dimension-item"><div class="dimension-label">📐 Высота</div><div class="dimension-value">${p.height} см</div></div>`:''}${p.depth?`<div class="dimension-item"><div class="dimension-label">📏 Глубина</div><div class="dimension-value">${p.depth} см</div></div>`:''}${p.weight?`<div class="dimension-item"><div class="dimension-label">⚖️ Вес</div><div class="dimension-value">${p.weight} кг</div></div>`:''}${p.volume?`<div class="dimension-item"><div class="dimension-label">📦 Объем</div><div class="dimension-value">${p.volume} м³</div></div>`:''}</div>`; }
+            document.getElementById('productDetailCard').innerHTML=`<div class="product-detail-image-container"><svg class="product-detail-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div><div class="product-detail-info"><h1 class="product-detail-title">${escapeHtml(p.name)}</h1><div class="product-detail-price">💰 ${p.price.toLocaleString()} ₽</div><div class="product-detail-meta"><div class="meta-item"><span>🆔</span><span><code>${p.id}</code></span></div><div class="meta-item"><span>⭐</span><span>${p.avg?p.avg.toFixed(1):'0.0'}</span></div><div class="meta-item" style="color:#28a745;font-weight:bold;"><span>📦</span><span>Склад: ${p.stock_quantity||0} шт.</span></div><div class="meta-item"><span>👁️</span><span>${p.visibility?'Видимый':'Скрытый'}</span></div><div class="meta-item"><span>📅</span><span>${formatDate(p.created_at)}</span></div></div>${dims}<div class="product-detail-description"><strong>📄 Описание:</strong><br>${escapeHtml(p.description||'Нет описания')}</div><div class="stock-section"><h3>📦 Размещение на складе</h3><div class="stock-row"><div class="form-group"><label style="font-size:0.9em">Сколько штук разместить?</label><input type="number" id="stockQuantity" value="1" min="1"></div><div style="flex:1.5;"><button class="btn-success" onclick="handleAutoStock(event, '${p.id}')">🤖 Разместить автоматически</button></div></div><div class="manual-withdraw-link" onclick="document.getElementById('manualWithdrawForm').classList.toggle('active')">Списать товар с конкретной полки вручную</div><div id="manualWithdrawForm" class="manual-withdraw-form"><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">ID Полки</label><input type="number" id="withdrawShelfId" placeholder="1" min="1"></div><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">Кол-во</label><input type="number" id="withdrawQty" value="1" min="1"></div><button class="btn-danger btn-small" onclick="handleManualWithdraw(event, '${p.id}')">➖ Списать</button></div></div><div class="review-form"><h3>✍️ Добавить отзыв</h3><form onsubmit="addReview(event, '${p.id}')"><div class="form-group"><label>Текст отзыва *</label><textarea id="reviewDescription" rows="3" required></textarea></div><div class="form-group"><label>Оценка *</label>${renderStarRatingCompact(5)}</div><div class="form-group"><label>JWT токен (необязательно)</label><input type="text" id="reviewJwt" class="jwt-field" placeholder="eyJhbG..."></div><button type="submit">📝 Отправить отзыв</button></form></div><div class="reviews-section"><h3 class="reviews-title">📊 Отзывы</h3>${revs}</div></div>`;
         }
 
-        function toggleManualWithdraw() { document.getElementById('manualWithdrawForm').classList.toggle('active'); }
-
         async function handleAutoStock(e, productId) {
-            e.preventDefault();
-            const qty = parseInt(document.getElementById('stockQuantity').value);
-            if (!qty) return showToast('Укажите количество', 'error');
-            const btn = e.target, origText = btn.innerText; btn.innerHTML = '<span class="loading"></span> Поиск полки...'; btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/products/auto-stock`, { method: 'POST', mode: 'cors', credentials: 'omit', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: productId, quantity: qty }) });
-                if (!res.ok) throw new Error(await getErrorMessage(res));
-                const data = await res.json(); 
-                showToast(`✅ ${data.message}`, 'success');
-                loadProductDetail(); // Обновляем данные, чтобы увидеть новый остаток
-            } catch (err) { showToast(`❌ ${err.message}`, 'error'); } finally { btn.innerHTML = origText; btn.disabled = false; }
+            e.preventDefault(); const qty=parseInt(document.getElementById('stockQuantity').value); if(!qty) return showToast('Укажите количество', 'error');
+            const btn=e.target, origText=btn.innerText; btn.innerHTML='<span class="loading"></span> Поиск полки...'; btn.disabled=true;
+            try { const res=await fetch(`${API_BASE}/products/auto-stock`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({product_id:productId, quantity:qty})}); if(!res.ok) throw new Error(await getErrorMessage(res));
+            const data=await res.json(); let toastMsg=`${data.message}\n\n`; if(data.results&&data.results.length) { data.results.forEach(r=>{ toastMsg+=`📍 Полка ${r.shelf_id}:\n${r.message}\n`; }); }
+            showToast(toastMsg, data.total_placed===data.total_requested?'success':'error'); loadProductDetail(); } catch(err) { showToast(`❌ ${err.message}`, 'error'); } finally { btn.innerHTML=origText; btn.disabled=false; }
         }
 
         async function handleManualWithdraw(e, productId) {
-            e.preventDefault();
-            const shelfId = document.getElementById('withdrawShelfId').value, qty = parseInt(document.getElementById('withdrawQty').value);
-            if (!shelfId || !qty) return showToast('Заполните ID полки и количество', 'error');
-            const btn = e.target, origText = btn.innerText; btn.innerHTML = '<span class="loading"></span>...'; btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/shelves/withdraw`, { method: 'POST', mode: 'cors', credentials: 'omit', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shelf_id: shelfId, product_id: productId, quantity: qty }) });
-                if (!res.ok) throw new Error(await getErrorMessage(res));
-                const data = await res.json(); showToast(`✅ ${data.message}. Осталось: ${data.new_quantity} шт.`, 'success');
-                loadProductDetail(); // Обновляем остаток
-            } catch (err) { showToast(`❌ ${err.message}`, 'error'); } finally { btn.innerHTML = origText; btn.disabled = false; }
+            e.preventDefault(); const shelfId=document.getElementById('withdrawShelfId').value, qty=parseInt(document.getElementById('withdrawQty').value);
+            if(!shelfId||!qty) return showToast('Заполните поля', 'error'); const btn=e.target, origText=btn.innerText; btn.innerHTML='<span class="loading"></span>...'; btn.disabled=true;
+            try { const res=await fetch(`${API_BASE}/shelves/withdraw`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({shelf_id:shelfId, product_id:productId, quantity:qty})}); if(!res.ok) throw new Error(await getErrorMessage(res));
+            const data=await res.json(); showToast(`✅ ${data.message}. Осталось: ${data.new_quantity} шт.`, 'success'); loadProductDetail(); } catch(err) { showToast(`❌ ${err.message}`, 'error'); } finally { btn.innerHTML=origText; btn.disabled=false; }
         }
 
         async function addReview(e, productId) {
-            e.preventDefault(); const desc = document.getElementById('reviewDescription').value; if (!desc) return;
-            const btn = e.target.querySelector('button[type="submit"]'), orig = btn.innerText; btn.innerHTML = '<span class="loading"></span>...'; btn.disabled = true;
-            const headers = { 'Content-Type': 'application/json' }; const jwt = document.getElementById('reviewJwt').value; if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
-            try {
-                const res = await fetch(`${API_BASE}/review/create`, { method: 'POST', mode: 'cors', credentials: 'omit', headers, body: JSON.stringify({ product_id: productId, description: desc, grade: currentRating }) });
-                if (!res.ok) throw new Error(await getErrorMessage(res));
-                showToast('✅ Отзыв добавлен', 'success');
-                document.getElementById('reviewDescription').value = ''; document.getElementById('reviewJwt').value = ''; setRating(5); loadProductDetail();
-            } catch (err) { showToast('❌ ' + err.message, 'error'); } finally { btn.innerHTML = orig; btn.disabled = false; }
+            e.preventDefault(); const desc=document.getElementById('reviewDescription').value; if(!desc)return;
+            const btn=e.target.querySelector('button[type="submit"]'), orig=btn.innerText; btn.innerHTML='<span class="loading"></span>...'; btn.disabled=true;
+            const headers={'Content-Type':'application/json'}; const jwt=document.getElementById('reviewJwt').value; if(jwt) headers['Authorization']='Bearer '+jwt;
+            try { const res=await fetch(`${API_BASE}/review/create`, {method:'POST', headers, body:JSON.stringify({product_id:productId, description:desc, grade:currentRating})}); if(!res.ok) throw new Error(await getErrorMessage(res));
+            showToast('✅ Отзыв добавлен', 'success'); document.getElementById('reviewDescription').value=''; document.getElementById('reviewJwt').value=''; setRating(5); loadProductDetail(); } catch(err) { showToast('❌ '+err.message, 'error'); } finally { btn.innerHTML=orig; btn.disabled=false; }
         }
 
         async function createProduct(e) {
-            e.preventDefault(); 
-            const fd = new FormData(); 
-            fd.append('name', document.getElementById('productName').value); 
-            fd.append('description', document.getElementById('productDescription').value); 
-            fd.append('price', document.getElementById('productPrice').value); 
-            fd.append('visibility', document.getElementById('productVisibility').checked);
-            ['Width', 'Height', 'Depth', 'Weight'].forEach(dim => { const val = document.getElementById(`product${dim}`).value; if (val) fd.append(dim.toLowerCase(), val); });
-            const vol = calculateVolume(); if (vol) fd.append('volume', vol.toString());
-            const btn = e.target.querySelector('button[type="submit"]'), orig = btn.innerText; btn.innerHTML = '<span class="loading"></span>...'; btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/products`, { method: 'POST', mode: 'cors', credentials: 'omit', body: fd }); 
-                if (!res.ok) throw new Error(await getErrorMessage(res));
-                showToast('✅ Товар создан', 'success'); e.target.reset(); document.getElementById('productVisibility').checked = true;
-                document.querySelectorAll('.tab').forEach(t => { if (t.textContent.includes('Список')) t.click(); });
-            } catch (err) { showToast('❌ ' + err.message, 'error'); } finally { btn.innerHTML = orig; btn.disabled = false; }
+            e.preventDefault(); const fd=new FormData(); fd.append('name',document.getElementById('productName').value); fd.append('description',document.getElementById('productDescription').value); fd.append('price',document.getElementById('productPrice').value); fd.append('visibility',document.getElementById('productVisibility').checked);
+            ['Width','Height','Depth','Weight'].forEach(dim=>{ const val=document.getElementById(`product${dim}`).value; if(val) fd.append(dim.toLowerCase(),val); }); const vol=calculateVolume(); if(vol) fd.append('volume',vol.toString());
+            const btn=e.target.querySelector('button[type="submit"]'), orig=btn.innerText; btn.innerHTML='<span class="loading"></span>...'; btn.disabled=true;
+            try { const res=await fetch(`${API_BASE}/products`, {method:'POST', body:fd}); if(!res.ok) throw new Error(await getErrorMessage(res));
+            showToast('✅ Товар создан', 'success'); e.target.reset(); document.getElementById('productVisibility').checked=true;
+            document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.includes('Список')) t.click(); }); } catch(err) { showToast('❌ '+err.message, 'error'); } finally { btn.innerHTML=orig; btn.disabled=false; }
         }
 
-        async function optimizeAllocation(e) {
-            e.preventDefault();
-            const itemsRaw = document.getElementById('optimizeItems').value, dryRun = document.getElementById('dryRun').checked;
-            if (!itemsRaw.trim()) return showToast('Заполните поля', 'error');
-            const items = itemsRaw.split('\n').filter(l => l.trim()).map(l => { const parts = l.split(':'); return { product_id: parts[0].trim(), quantity: parseInt(parts[1]) || 1 }; });
-            const el = document.getElementById('optimizationResult'); el.innerHTML = '<div class="loading"></div> Анализ склада...';
-            const btn = e.target.querySelector('button[type="submit"]'), orig = btn.innerText; btn.innerHTML = '<span class="loading"></span> Расчет...'; btn.disabled = true;
+        async function runGlobalOptimization() {
+            const btn = document.getElementById('btnOptimizeAll');
+            const el = document.getElementById('optimizationResult');
+            btn.disabled = true;
+            btn.innerText = '<span class="loading"></span> Анализ и перестройка...';
+            el.style.display = 'block';
+            el.innerHTML = '<span class="loading"></span> Очистка склада и расчет ABC/XYZ...';
+
             try {
-                const res = await fetch(`${API_BASE}/api/optimize`, { method: 'POST', mode: 'cors', credentials: 'omit', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, dry_run: dryRun }) });
+                const res = await fetch(`${API_BASE}/api/optimize/all`, { method: 'POST' });
                 if (!res.ok) throw new Error(await getErrorMessage(res));
                 const data = await res.json();
-                let html = '<h3>📊 Результаты:</h3>'; if (data.message) html += `<p><strong>${data.message}</strong></p>`;
-                if (data.results && data.results.length) {
-                    html += `<table class="results-table"><tr><th>Товар</th><th>Кол-во</th><th>Полка</th><th>Оценка</th><th>Статус</th></tr>`;
-                    data.results.forEach(r => { html += `<tr><td><code>${r.product_id.substring(0, 8)}...</code></td><td>${r.quantity || 1}</td><td><code>${r.shelf_id || '-'}</code></td><td>${r.score ? r.score.toFixed(2) : '-'}</td><td><span class="${r.assigned ? 'badge-success' : 'badge-danger'}">${r.assigned ? '✅ Успех' : '❌ ' + (r.reason || 'Нет места')}</span></td></tr>`; });
-                    html += `</table><p style="margin-top:10px;">📈 Размещено: ${data.results.filter(r => r.assigned).length} из ${data.results.length}</p>`;
-                } else html += '<p>Нет результатов</p>';
-                el.innerHTML = html; showToast('✅ Оптимизация завершена', 'success');
-            } catch (err) { el.innerHTML = `<p style="color:red;">❌ ${err.message}</p>`; } finally { btn.innerHTML = orig; btn.disabled = false; }
+                
+                let html = '<h3>📊 Результаты перестройки:</h3>';
+                if (data.length === 0) {
+                    html += '<p>Склад пуст, размещать нечего.</p>';
+                } else {
+                    html += `<table class="results-table"><tr><th>Товар</th><th>Индекс Важности</th><th>Новая Полка</th><th>Статус</th></tr>`;
+                    data.forEach(r => { 
+                        const score = r.score ? r.score.toFixed(1) : '-';
+                        const color = r.score >= 80 ? '#28a745' : (r.score >= 40 ? '#ffc107' : '#dc3545');
+                        const pid = r.product_id?.substring(0,8) || 'err';
+                        html += `<tr><td><code>${pid}...</code></td><td style="color:${color};font-weight:bold;">${score}</td><td><code>${r.shelf_id || '-'}</code></td><td>${r.assigned ? '<span class="badge-success">✅ Перемещен</span>' : `<span class="badge-danger">❌ ${r.reason}</span>`}</td></tr>`; 
+                    });
+                    html += `</table><p style="margin-top:10px;font-weight:bold;">Успешно переставлено: ${data.filter(r => r.assigned).length} из ${data.length}</p>`;
+                }
+                el.innerHTML = html;
+                showToast('✅ Склад успешно перестроен по алгоритму ABC/XYZ!', 'success');
+                document.getElementById('tab-map').click();
+            } catch(err) {
+                el.innerHTML = `<span style="color:red">❌ ${err.message}</span>`;
+                showToast(`❌ ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '🚀 Провести полную перестройку склада';
+            }
         }
 
-        function showToast(msg, type = 'info') { const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg; document.body.appendChild(t); setTimeout(() => { t.style.animation = 'slideIn 0.3s reverse'; setTimeout(() => t.remove(), 300); }, 4000); }
-        document.addEventListener('DOMContentLoaded', () => { document.getElementById('filter-all').classList.add('active'); checkPing(); });
+        async function loadWarehouseMap() {
+            const container=document.getElementById('warehouseMapContainer'); 
+            container.innerHTML='<div style="text-align:center;width:100%;padding:50px 0;"><span class="loading"></span> Построение карты...</div>';
+            try { 
+                const res=await fetch(`${API_BASE}/api/warehouse/map`); 
+                if(!res.ok) throw new Error("Ошибка загрузки карты: " + res.status); 
+                const data=await res.json();
+                
+                let html='<div class="aisle-container">'; 
+                (data.racks || []).forEach(rack=>{ 
+                    html+=`<div class="rack-unit"><div class="rack-label">${escapeHtml(rack.aisle || 'Без имени')}</div><div class="shelves-column">`;
+                    
+                    (rack.shelves || []).forEach(shelf=>{ 
+                        // ИСПРАВЛЕНИЕ: Добавлен ID полки для удобного списания + защита от null
+                        const usedCap = shelf.used_capacity || 0;
+                        
+                        if(shelf.product) { 
+                            const color=uuidToColor(shelf.product.id); 
+                            const shortName=shelf.product.name.length>10?shelf.product.name.substring(0,10)+'...':shelf.product.name;
+                            html+=`<div class="shelf-box" style="background-color:${color};border-color:${color};"><span class="level-badge">Полка ${shelf.id}</span>${escapeHtml(shortName)} (${shelf.product.quantity})<div class="tooltip"><b>Полка ID: ${shelf.id} (Ур.${shelf.level})</b><br><b>${escapeHtml(shelf.product.name)}</b><br>Кол-во: ${shelf.product.quantity} шт.<br>Занято: <b>${usedCap.toFixed(2)}</b> / ${shelf.max_capacity} м³</div></div>`;
+                        } else { 
+                            html+=`<div class="shelf-box empty"><span class="level-badge" style="color:#adb5bd;">Полка ${shelf.id}</span>Пусто<div class="tooltip" style="color:#ccc;">Полка ID: ${shelf.id} (Ур.${shelf.level})<br>Занято: <b>${usedCap.toFixed(2)}</b> / ${shelf.max_capacity} м³<br><br>Свободно: ${(shelf.max_capacity - usedCap).toFixed(2)} м³</div></div>`; 
+                        } 
+                    });
+                    html+=`</div></div>`; 
+                }); 
+                html+='</div>'; 
+                container.innerHTML=html;
+            } catch(e) { 
+                console.error("Ошибка рендера карты:", e);
+                container.innerHTML=`<p style="color:#dc3545;text-align:center;padding:50px 0;">Ошибка рендера: ${escapeHtml(e.message)}</p>`; 
+            }
+        }
+
+        function showToast(msg, type='info') { const t=document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{ t.style.animation='slideIn 0.3s reverse'; setTimeout(()=>t.remove(), 300); }, 4000); }
+        document.addEventListener('DOMContentLoaded', checkPing);
     </script>
 </body>
 </html>

@@ -9,6 +9,7 @@ import (
     "warehouse/internal/server/products"
     reviews "warehouse/internal/server/review"
     "warehouse/internal/server/shelf"
+    "warehouse/internal/server/warehouse"
     "warehouse/internal/service"
 
     "github.com/go-chi/chi"
@@ -65,20 +66,18 @@ func (s *Server) CreateServer() func() {
         w.Write([]byte("pong"))
     })
 
-    // Товары
     router.Get("/products", products.GetProducts(s.repo, s.log))
     router.Get("/product/{id}", products.GetProduct(s.repo, s.log))
     router.Post("/products", products.CreateProduct(s.repo, s.log))
-    
-    // Отзывы
+
     router.Post("/review/create", reviews.CreateReview(s.repo, s.log))
-    
-    // Склад (Автоматическое размещение и ручное списание)
+
     router.Post("/products/auto-stock", shelf.AutoRestockHandler(s.repo, s.log))
     router.Post("/shelves/withdraw", shelf.WithdrawHandler(s.repo, s.log))
 
-    // Оптимизация
     router.Post("/api/optimize", optimization.OptimizeHandler(s.optimizer, s.log))
+    router.Post("/api/optimize/all", optimization.OptimizeAllHandler(s.optimizer, s.log))
+    router.Get("/api/warehouse/map", warehouse.GetWarehouseMapHandler(s.repo, s.log))
 
     router.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
         s.log.Warn("Method not allowed", slog.String("method", r.Method), slog.String("path", r.URL.Path))
