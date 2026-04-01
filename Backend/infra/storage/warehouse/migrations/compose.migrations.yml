@@ -3,7 +3,7 @@ services:
     image: migrator
     environment:
       - TYPE_DB=postgres
-      - URLS=postgresql://postgres:postgres@warehouse-haproxy:5000/postgres?sslmode=disable,postgresql://postgres:postgres@warehouse-haproxy:5002/postgres?sslmode=disable
+      - URLS=postgresql://warehouse_nmz6_user:v4IB0zklBdt0SEUydaBkFBktpZc039Qb@dpg-d76dokvpm1nc7393s3mg-a.oregon-postgres.render.com/warehouse_nmz6
     networks:
       - storage-network
     volumes:
