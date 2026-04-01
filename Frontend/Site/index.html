@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Warehouse Management Demo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,12 +12,13 @@
             background-attachment: fixed; 
             min-height: 100vh;
             padding: 20px;
+            padding-bottom: 80px; /* Место для мобильной навигации */
         }
         .container { max-width: 1600px; margin: 0 auto; }
         header { background: white; padding: 20px 30px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
         header h1 { color: #333; font-size: 2em; margin-bottom: 5px; }
         header p { color: #666; font-size: 0.9em; }
-        .ping-badge { display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
+        .ping-badge { display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.3s ease; white-space: nowrap; }
         .ping-badge.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .ping-badge.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px; }
@@ -28,7 +29,7 @@
         .info-tooltip-container { position: relative; display: inline-flex; align-items: center; cursor: help; }
         .info-tooltip-icon { width: 22px; height: 22px; border-radius: 50%; background: #e0e0e0; color: #555; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-style: italic; font-weight: bold; transition: all 0.2s; }
         .info-tooltip-container:hover .info-tooltip-icon { background: #667eea; color: white; }
-        .info-tooltip-text { visibility: hidden; opacity: 0; width: 340px; background: #333; color: #fff; text-align: left; border-radius: 10px; padding: 15px; position: absolute; z-index: 100; top: 130%; left: 50%; transform: translateX(-50%); transition: opacity 0.3s; font-size: 0.9em; line-height: 1.5; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-style: normal; font-weight: normal; }
+        .info-tooltip-text { visibility: hidden; opacity: 0; width: 300px; background: #333; color: #fff; text-align: left; border-radius: 10px; padding: 15px; position: absolute; z-index: 100; top: 130%; left: 50%; transform: translateX(-50%); transition: opacity 0.3s; font-size: 0.9em; line-height: 1.5; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-style: normal; font-weight: normal; }
         .info-tooltip-text::after { content: ""; position: absolute; bottom: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: transparent transparent #333 transparent; }
         .info-tooltip-container:hover .info-tooltip-text { visibility: visible; opacity: 1; }
         .form-group { margin-bottom: 20px; }
@@ -45,7 +46,7 @@
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
         .product-card { background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e0e0e0; cursor: pointer; transition: all 0.3s ease; position: relative; }
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-        .visibility-badge { position: absolute; top: 25px; right: 25px; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; z-index: 1; }
+        .visibility-badge { position: absolute; top: 15px; right: 15px; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; z-index: 1; }
         .visibility-badge.visible { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .visibility-badge.hidden { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .image-container { width: 100%; height: 180px; background: #f0f0f0; border-radius: 8px; margin-bottom: 12px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
@@ -57,8 +58,8 @@
         .list-view-toggle { display: flex; gap: 10px; margin-bottom: 15px; }
         .list-view-btn { flex: 1; padding: 10px 20px; border: none; background: transparent; color: #667eea; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: 500; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: inset 0 0 0 2px #667eea; } 
         .list-view-btn:hover, .list-view-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); } 
-        .filter-panel { background: #f0f2f5; border-radius: 10px; padding: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
-        .filter-btn { flex: 1; padding: 8px 12px; background: white; color: #444; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: 500; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .filter-panel { background: #f0f2f5; border-radius: 10px; padding: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); flex-wrap: wrap; }
+        .filter-btn { flex: 1; padding: 8px 12px; background: white; color: #444; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95em; font-weight: 500; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-width: 80px; }
         .filter-btn:hover { background: #f8f9ff; color: #667eea; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(102, 126, 234, 0.2); }
         .filter-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4); }
         .filter-btn .count { background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 20px; font-size: 0.8em; min-width: 28px; text-align: center; }
@@ -117,7 +118,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .tab-container { margin-top: 20px; }
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab { padding: 10px 20px; background: #f0f0f0; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+        .tab { padding: 10px 20px; background: #f0f0f0; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; flex: 1; text-align: center; white-space: nowrap; }
         .tab:hover { background: #e0e0e0; }
         .tab.active { background: #667eea; color: white; }
         .tab-content { display: none; }
@@ -135,7 +136,7 @@
         .toast.success { border-left: 4px solid #28a745; }
         .toast.error { border-left: 4px solid #dc3545; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .right-panel-btn { font-size: 1.2em; padding: 20px; margin-bottom: 20px; border-radius: 12px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+        .right-panel-btn { font-size: 1.2em; padding: 20px; margin-bottom: 20px; border-radius: 12px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); white-space: normal; line-height: 1.4; }
         .right-panel-btn:hover { box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4); }
         .warehouse-floor { background: #e9ecef; border-radius: 10px; padding: 20px; min-height: 300px; position: relative; border: 2px dashed #ced4da; }
         .aisle-container { display: flex; gap: 40px; justify-content: space-around; flex-wrap: wrap; }
@@ -148,19 +149,135 @@
         .shelf-box .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
         .shelf-box:hover .tooltip { visibility: visible; }
         .shelf-box .level-badge { position: absolute; top: 2px; left: 4px; font-size: 0.7em; opacity: 0.9; }
+
+        /* --- MOBILE NAVIGATION --- */
+        #mobile-nav {
+            display: none; /* Скрыто на десктопе */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 999;
+            border-top: 1px solid #eee;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        #mobile-nav button {
+            background: white;
+            color: #666;
+            border: none;
+            border-radius: 0;
+            font-size: 0.9em;
+            padding: 12px 0;
+            box-shadow: none;
+        }
+        #mobile-nav button.active {
+            background: #f8f9ff;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        #mobile-nav button:hover {
+            transform: none;
+            background: #f0f0f0;
+        }
+
+        /* --- MOBILE ADAPTIVE --- */
+        @media (max-width: 768px) {
+            #mobile-nav { display: flex; } /* Показываем на мобильном */
+            
+            body { padding: 10px; padding-bottom: 70px; }
+            .container { width: 100%; }
+            header { padding: 15px; margin-bottom: 15px; }
+            header h1 { font-size: 1.4em; line-height: 1.2; }
+            header p { font-size: 0.8em; }
+            .ping-badge { font-size: 0.8em; padding: 6px 12px; margin-top: 8px; width: 100%; text-align: center; box-sizing: border-box; }
+
+            .dashboard { grid-template-columns: 1fr; gap: 20px; }
+            
+            /* Отступы для якорей, чтобы хедер не перекрывал контент при скролле */
+            #section-products, #section-warehouse {
+                scroll-margin-top: 80px;
+            }
+
+            .card { padding: 15px; }
+            .card h2 { font-size: 1.2em; margin-bottom: 15px; }
+            .info-tooltip-text { width: 260px; left: 50%; transform: translateX(-50%); top: 120%; }
+
+            .tabs { gap: 5px; }
+            .tab { padding: 8px 10px; font-size: 0.9em; }
+
+            .list-view-toggle { margin-bottom: 10px; }
+            .list-view-btn { font-size: 0.9em; padding: 8px 10px; }
+
+            .filter-panel { padding: 8px; gap: 5px; }
+            .filter-btn { flex: 1 1 45%; font-size: 0.85em; padding: 6px 8px; height: auto; }
+
+            .product-card { padding: 10px; }
+            .image-container { height: 120px; }
+            .product-card h3 { font-size: 1.1em; }
+            .visibility-badge { top: 10px; right: 10px; font-size: 0.65em; padding: 2px 5px; }
+
+            .size-input-group { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .size-input-group .form-group label { font-size: 0.8em; }
+            .auto-calc-hint { font-size: 0.75em; }
+
+            .stock-row { flex-direction: column; align-items: stretch; gap: 10px; }
+            .stock-row .form-group { margin-bottom: 10px; min-width: auto; }
+            .manual-withdraw-form { flex-direction: column; align-items: stretch; }
+            
+            .product-detail-image-container { height: 200px; }
+            .product-detail-title { font-size: 1.5em; }
+            .product-detail-price { font-size: 1.8em; }
+            .product-detail-meta { gap: 10px; padding: 10px; font-size: 0.9em; }
+            .dimensions-section { grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+            
+            .right-panel-btn { font-size: 1em; padding: 15px; }
+            
+            /* Горизонтальный скролл для карты */
+            .warehouse-floor { 
+                padding: 10px; 
+                overflow-x: auto; 
+                border-style: solid; 
+                justify-content: flex-start;
+                -webkit-overflow-scrolling: touch;
+            }
+            .aisle-container { 
+                min-width: max-content; /* Чтобы сработал скролл */
+                gap: 20px; 
+                padding-right: 10px; /* Отступ для скроллбара */
+            }
+            .rack-unit { min-width: 100px; }
+            .shelf-box { width: 90px; height: 50px; font-size: 0.6em; }
+            .shelf-box .tooltip { display: none; /* Скрываем тултипы на телефоне, они мешают */ }
+            
+            .results-table { display: block; overflow-x: auto; font-size: 0.75em; }
+            .results-table th, .results-table td { padding: 6px; white-space: nowrap; }
+
+            .toast { 
+                width: 90vw; 
+                right: 5vw; 
+                left: 5vw; 
+                max-width: none; 
+                font-size: 0.9em; 
+                top: 10px; 
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🏭 Warehouse Management System</h1>
-            <p>Демонстрация API микросервиса Warehouse</p>
-            <div id="pingStatus" class="ping-badge" onclick="checkPing()">Проверить подключение к серверу</div>
+            <h1>🏭 Warehouse System</h1>
+            <p>Демонстрация API микросервиса</p>
+            <div id="pingStatus" class="ping-badge" onclick="checkPing()">Проверить подключение</div>
         </header>
 
         <div class="dashboard">
-            <div class="card">
-                <h2><i>📦</i> Управление товарами</h2>
+            <!-- Добавлен ID для скролла -->
+            <div class="card" id="section-products">
+                <h2><i>📦</i> Товары</h2>
                 <div class="tab-container">
                     <div class="tabs">
                         <div class="tab active" onclick="switchTab('products-list')">Список</div>
@@ -182,9 +299,9 @@
                     </div>
                     <div id="products-create" class="tab-content">
                         <form id="createProductForm" onsubmit="createProduct(event)">
-                            <div class="form-group"><label>Название товара *</label><input type="text" id="productName" placeholder="Например: Смартфон X100" required></div>
-                            <div class="form-group"><label>Описание</label><textarea id="productDescription" rows="3" placeholder="Описание товара..."></textarea></div>
-                            <div class="form-group"><label>Цена *</label><input type="number" id="productPrice" min="0" placeholder="9999" required></div>
+                            <div class="form-group"><label>Название *</label><input type="text" id="productName" placeholder="Смартфон X100" required></div>
+                            <div class="form-group"><label>Описание</label><textarea id="productDescription" rows="3" placeholder="Описание..."></textarea></div>
+                            <div class="form-group"><label>Цена (₽) *</label><input type="number" id="productPrice" min="0" placeholder="9999" required></div>
                             <div class="form-group">
                                 <label>Габариты и вес</label>
                                 <div class="size-input-group">
@@ -193,22 +310,22 @@
                                     <div><label style="font-size: 0.85em;">Глубина (см)</label><input type="number" id="productDepth" step="0.1" placeholder="0.0"></div>
                                     <div><label style="font-size: 0.85em;">Вес (кг)</label><input type="number" id="productWeight" step="0.01" placeholder="0.0"></div>
                                 </div>
-                                <small class="auto-calc-hint">📐 Объем будет рассчитан автоматически (в м³)</small>
+                                <small class="auto-calc-hint">📐 Объем рассчитается авт. (м³)</small>
                             </div>
                             <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
                                 <input type="checkbox" id="productVisibility" checked style="width:auto;">
-                                <label for="productVisibility" style="margin:0;">Видимый товар</label>
+                                <label for="productVisibility" style="margin:0;">Видимый</label>
                             </div>
                             <button type="submit">✨ Создать товар</button>
                         </form>
                     </div>
                     <div id="products-detail" class="tab-content">
-                        <div class="form-group"><label>ID товара</label><input type="text" id="productDetailId" placeholder="Введите ID товара"></div>
-                        <button onclick="loadProductDetail()">🔍 Получить детали</button>
+                        <div class="form-group"><label>ID товара</label><input type="text" id="productDetailId" placeholder="UUID"></div>
+                        <button onclick="loadProductDetail()">🔍 Найти</button>
                         <div id="detailContainer" class="detail-container hidden">
                             <div class="button-group">
-                                <button class="button-outline active" onclick="showDetailView('card')" id="detail-view-card">📋 Карточка товара</button>
-                                <button class="button-outline" onclick="showDetailView('json')" id="detail-view-json">🔧 Показать JSON</button>
+                                <button class="button-outline active" onclick="showDetailView('card')" id="detail-view-card">📋 Карточка</button>
+                                <button class="button-outline" onclick="showDetailView('json')" id="detail-view-json">🔧 JSON</button>
                             </div>
                             <div id="productDetailCard" class="product-detail-card"></div>
                             <div id="productDetailJson" class="json-viewer hidden"></div>
@@ -217,30 +334,30 @@
                 </div>
             </div>
 
-            <div class="card">
+            <!-- Добавлен ID для скролла -->
+            <div class="card" id="section-warehouse">
                 <h2>
-                    <i>⚡</i> Оптимизация склада 
+                    <i>⚡</i> Склад
                     <div class="info-tooltip-container">
                         <div class="info-tooltip-icon">i</div>
                         <div class="info-tooltip-text">
-                            <strong>Как работает магическая кнопка?</strong><br><br>
-                            1. Алгоритм собирает ВСЕ товары на складе.<br>
-                            2. Временно убирает их с полок.<br>
-                            3. Высчитывает матрицу важности (ABC по обороту, XYZ по стабильности).<br>
-                            4. "Золотые" товары (AX) ставит на Полку 1 (Низ). "Мусор" (CZ) скидывает на Полку 9 (Верх, Ряд В).<br>
-                            5. Записывает новое расположение.
+                            <strong>Алгоритм:</strong><br>
+                            1. Сбор товаров.<br>
+                            2. Расчет ABC/XYZ.<br>
+                            3. AX на Полку 1 (Низ).<br>
+                            4. CZ на Верх.
                         </div>
                     </div>
                 </h2>
                 
                 <div class="tab-container">
                     <div class="tabs">
-                        <div class="tab active" id="tab-optimize" onclick="switchRightTab('right-optimize', this)">ABC/XYZ Рефакторинг</div>
-                        <div class="tab" id="tab-map" onclick="switchRightTab('right-map', this)">Визуальная карта</div>
+                        <div class="tab active" id="tab-optimize" onclick="switchRightTab('right-optimize', this)">ABC/XYZ</div>
+                        <div class="tab" id="tab-map" onclick="switchRightTab('right-map', this)">Карта</div>
                     </div>
                     
                     <div id="right-optimize" class="tab-content active">
-                        <button id="btnOptimizeAll" class="right-panel-btn" onclick="runGlobalOptimization()">🚀 Провести полную перестройку склада</button>
+                        <button id="btnOptimizeAll" class="right-panel-btn" onclick="runGlobalOptimization()">🚀 Перестроить склад</button>
                         <div id="optimizationResult" class="response-area" style="display:none;"><pre>Ждем действия...</pre></div>
                     </div>
 
@@ -248,16 +365,66 @@
                         <div style="display:flex; gap:10px; margin-bottom:15px;">
                             <button onclick="loadWarehouseMap()" style="background:#667eea; width:auto; padding:10px 15px;">🔄 Обновить</button>
                         </div>
-                        <div id="warehouseMapContainer" class="warehouse-floor"><div style="text-align:center; color: #6c757d; margin: auto; padding: 50px 0;">Нажмите "Обновить"</div></div>
+                        <div id="warehouseMapContainer" class="warehouse-floor"><div style="text-align:center; color: #6c757d; margin: auto; padding: 50px 0;">Нажмите Обновить</div></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Мобильная навигация (видна только на телефоне) -->
+    <nav id="mobile-nav">
+        <button id="nav-products" class="active" onclick="scrollToSection('section-products', 'nav-products')">📦 Товары</button>
+        <button id="nav-warehouse" onclick="scrollToSection('section-warehouse', 'nav-warehouse')">⚡ Склад</button>
+    </nav>
+
     <script>
         const API_BASE = 'https://warehouse-back.onrender.com';
         let currentDetailView = 'card', currentProductData = null, currentVisibilityFilter = 'all', currentListView = 'cards', currentProductsData = null, currentRating = 5;
+
+        // Scroll Spy: Следит за тем, какой блок сейчас в центре экрана
+        const setupScrollSpy = () => {
+            const sections = document.querySelectorAll('#section-products, #section-warehouse');
+            const navButtons = document.querySelectorAll('#mobile-nav button');
+
+            const observerOptions = {
+                root: null, // viewport
+                // ИСПРАВЛЕНИЕ: Смещаем зону реакции вверх. 
+                // Теперь срабатывает, когда верх блока пересекает верхнюю границу экрана (с отступом 15%)
+                rootMargin: '-87% 0px 0% 0px', 
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const sectionId = entry.target.id;
+                        const btnId = sectionId === 'section-products' ? 'nav-products' : 'nav-warehouse';
+                        
+                        navButtons.forEach(btn => btn.classList.remove('active'));
+                        const activeBtn = document.getElementById(btnId);
+                        if(activeBtn) activeBtn.classList.add('active');
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => observer.observe(section));
+        };
+
+        // Функция прокрутки с подсветкой активной кнопки (при клике)
+        function scrollToSection(sectionId, navBtnId) {
+            const element = document.getElementById(sectionId);
+            if(element) {
+                // Плавный скролл
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Обновляем активную кнопку в мобильном меню
+                if(navBtnId) {
+                    document.querySelectorAll('#mobile-nav button').forEach(btn => btn.classList.remove('active'));
+                    document.getElementById(navBtnId).classList.add('active');
+                }
+            }
+        }
 
         function uuidToColor(uuid) { let hash=0; for(let i=0;i<uuid.length;i++) { hash=uuid.charCodeAt(i)+((hash<<5)-hash); hash=hash&hash; } return `hsl(${Math.abs(hash%360)}, 75%, 45%)`; }
         async function getErrorMessage(res) { const text = await res.text(); try { return JSON.parse(text).message || text; } catch { return text; } }
@@ -273,11 +440,10 @@
         async function checkPing() {
             const el=document.getElementById('pingStatus'); el.innerHTML='<span class="loading"></span>';
             try { const res=await fetch(`${API_BASE}/ping`); el.className='ping-badge success'; el.innerHTML='✅ Сервер доступен'; setVisibilityFilter('all'); setTimeout(()=>loadProducts(), 500); }
-            catch(e) { el.className='ping-badge error'; el.innerHTML='❌ Сервер недоступен'; }
+            catch(e) { el.className='ping-badge error'; el.innerHTML='❌ Нет связи'; }
         }
 
         function switchTab(tabId) {
-            // ИСПРАВЛЕНИЕ: Ищем табы только внутри ТЕКУЩЕГО контейнера, чтобы не сбивать правое меню
             const container = event.target.closest('.tab-container');
             container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -325,7 +491,7 @@
         function renderProductsCards(products) {
             const el=document.getElementById('productsList');
             if(!products.length) { el.innerHTML='<p style="text-align:center;color:#666;padding:20px;">📭 Пусто</p>'; return; }
-            el.innerHTML=products.map(p=>`<div class="product-card" onclick="showProductDetail('${p.id}')"><div class="visibility-badge ${p.visibility?'visible':'hidden'}">${p.visibility?'👁️':'👻'}</div><div class="image-container"><svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div><h3>${escapeHtml(p.name)}</h3><div class="price">💰 ${p.price} ₽</div><div class="reviews">⭐ ${p.avg?p.avg.toFixed(1):'0.0'} (${p.count||0})</div><div class="reviews" style="color: #28a745; font-weight: 500;">📦 На складе: ${p.stock_quantity||0} шт.</div><div class="product-id">ID: ${p.id.substring(0,8)}...</div></div>`).join('');
+            el.innerHTML=products.map(p=>`<div class="product-card" onclick="showProductDetail('${p.id}')"><div class="visibility-badge ${p.visibility?'visible':'hidden'}">${p.visibility?'👁️':'👻'}</div><div class="image-container"><svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div><h3>${escapeHtml(p.name)}</h3><div class="price">💰 ${p.price} ₽</div><div class="reviews">⭐ ${p.avg?p.avg.toFixed(1):'0.0'} (${p.count||0})</div><div class="reviews" style="color: #28a745; font-weight: 500;">📦 Склад: ${p.stock_quantity||0}</div><div class="product-id">ID: ${p.id.substring(0,8)}...</div></div>`).join('');
         }
         function renderProductsJson(p) { renderJsonView(p, document.getElementById('productsJson')); }
         function renderJsonView(data, el) { const h=JSON.stringify(data,null,2).replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m=>{ let c='number'; if(/^"/.test(m))c=/:$/.test(m)?'key':'string'; else if(/true|false/.test(m))c='boolean'; else if(/null/.test(m))c='null'; return `<span class="${c}">${m}</span>`; }); el.innerHTML=`<pre>${h}</pre>`; }
@@ -357,12 +523,12 @@
         function renderProductDetailCard(p) {
             const revs=p.reviews&&p.reviews.length?p.reviews.map(r=>`<div class="review-card"><div class="review-header"><span class="review-author">👤 ${escapeHtml(r.login||'Аноним')}</span><span class="review-grade"><span class="rating-stars">${renderStars(r.grade)}</span> ${r.grade}.0</span></div><div class="review-date">📅 ${formatDate(r.created_at)}</div><div class="review-text">💬 ${escapeHtml(r.description)}</div></div>`).join(''):'<p style="color:#666;text-align:center;">Нет отзывов</p>';
             let dims=''; if(p.width||p.height||p.depth||p.weight||p.volume) { dims=`<div class="dimensions-section">${p.width?`<div class="dimension-item"><div class="dimension-label">📏 Ширина</div><div class="dimension-value">${p.width} см</div></div>`:''}${p.height?`<div class="dimension-item"><div class="dimension-label">📐 Высота</div><div class="dimension-value">${p.height} см</div></div>`:''}${p.depth?`<div class="dimension-item"><div class="dimension-label">📏 Глубина</div><div class="dimension-value">${p.depth} см</div></div>`:''}${p.weight?`<div class="dimension-item"><div class="dimension-label">⚖️ Вес</div><div class="dimension-value">${p.weight} кг</div></div>`:''}${p.volume?`<div class="dimension-item"><div class="dimension-label">📦 Объем</div><div class="dimension-value">${p.volume} м³</div></div>`:''}</div>`; }
-            document.getElementById('productDetailCard').innerHTML=`<div class="product-detail-image-container"><svg class="product-detail-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div><div class="product-detail-info"><h1 class="product-detail-title">${escapeHtml(p.name)}</h1><div class="product-detail-price">💰 ${p.price.toLocaleString()} ₽</div><div class="product-detail-meta"><div class="meta-item"><span>🆔</span><span><code>${p.id}</code></span></div><div class="meta-item"><span>⭐</span><span>${p.avg?p.avg.toFixed(1):'0.0'}</span></div><div class="meta-item" style="color:#28a745;font-weight:bold;"><span>📦</span><span>Склад: ${p.stock_quantity||0} шт.</span></div><div class="meta-item"><span>👁️</span><span>${p.visibility?'Видимый':'Скрытый'}</span></div><div class="meta-item"><span>📅</span><span>${formatDate(p.created_at)}</span></div></div>${dims}<div class="product-detail-description"><strong>📄 Описание:</strong><br>${escapeHtml(p.description||'Нет описания')}</div><div class="stock-section"><h3>📦 Размещение на складе</h3><div class="stock-row"><div class="form-group"><label style="font-size:0.9em">Сколько штук разместить?</label><input type="number" id="stockQuantity" value="1" min="1"></div><div style="flex:1.5;"><button class="btn-success" onclick="handleAutoStock(event, '${p.id}')">🤖 Разместить автоматически</button></div></div><div class="manual-withdraw-link" onclick="document.getElementById('manualWithdrawForm').classList.toggle('active')">Списать товар с конкретной полки вручную</div><div id="manualWithdrawForm" class="manual-withdraw-form"><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">ID Полки</label><input type="number" id="withdrawShelfId" placeholder="1" min="1"></div><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">Кол-во</label><input type="number" id="withdrawQty" value="1" min="1"></div><button class="btn-danger btn-small" onclick="handleManualWithdraw(event, '${p.id}')">➖ Списать</button></div></div><div class="review-form"><h3>✍️ Добавить отзыв</h3><form onsubmit="addReview(event, '${p.id}')"><div class="form-group"><label>Текст отзыва *</label><textarea id="reviewDescription" rows="3" required></textarea></div><div class="form-group"><label>Оценка *</label>${renderStarRatingCompact(5)}</div><div class="form-group"><label>JWT токен (необязательно)</label><input type="text" id="reviewJwt" class="jwt-field" placeholder="eyJhbG..."></div><button type="submit">📝 Отправить отзыв</button></form></div><div class="reviews-section"><h3 class="reviews-title">📊 Отзывы</h3>${revs}</div></div>`;
+            document.getElementById('productDetailCard').innerHTML=`<div class="product-detail-image-container"><svg class="product-detail-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div><div class="product-detail-info"><h1 class="product-detail-title">${escapeHtml(p.name)}</h1><div class="product-detail-price">💰 ${p.price.toLocaleString()} ₽</div><div class="product-detail-meta"><div class="meta-item"><span>🆔</span><span><code>${p.id.substring(0,8)}...</code></span></div><div class="meta-item"><span>⭐</span><span>${p.avg?p.avg.toFixed(1):'0.0'}</span></div><div class="meta-item" style="color:#28a745;font-weight:bold;"><span>📦</span><span>Склад: ${p.stock_quantity||0}</span></div><div class="meta-item"><span>👁️</span><span>${p.visibility?'Видимый':'Скрытый'}</span></div><div class="meta-item"><span>📅</span><span>${formatDate(p.created_at)}</span></div></div>${dims}<div class="product-detail-description"><strong>📄 Описание:</strong><br>${escapeHtml(p.description||'Нет описания')}</div><div class="stock-section"><h3>📦 Размещение</h3><div class="stock-row"><div class="form-group"><label style="font-size:0.9em">Кол-во</label><input type="number" id="stockQuantity" value="1" min="1"></div><div style="flex:1.5;"><button class="btn-success" onclick="handleAutoStock(event, '${p.id}')">🤖 Авто-размещение</button></div></div><div class="manual-withdraw-link" onclick="document.getElementById('manualWithdrawForm').classList.toggle('active')">Списать вручную</div><div id="manualWithdrawForm" class="manual-withdraw-form"><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">ID Полки</label><input type="number" id="withdrawShelfId" placeholder="1" min="1"></div><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">Кол-во</label><input type="number" id="withdrawQty" value="1" min="1"></div><button class="btn-danger btn-small" onclick="handleManualWithdraw(event, '${p.id}')">➖ Списать</button></div></div><div class="review-form"><h3>✍️ Отзыв</h3><form onsubmit="addReview(event, '${p.id}')"><div class="form-group"><label>Текст *</label><textarea id="reviewDescription" rows="3" required></textarea></div><div class="form-group"><label>Оценка *</label>${renderStarRatingCompact(5)}</div><div class="form-group"><label>JWT (опц.)</label><input type="text" id="reviewJwt" class="jwt-field" placeholder="eyJhbG..."></div><button type="submit">📝 Отправить</button></form></div><div class="reviews-section"><h3 class="reviews-title">📊 Отзывы</h3>${revs}</div></div>`;
         }
 
         async function handleAutoStock(e, productId) {
             e.preventDefault(); const qty=parseInt(document.getElementById('stockQuantity').value); if(!qty) return showToast('Укажите количество', 'error');
-            const btn=e.target, origText=btn.innerText; btn.innerHTML='<span class="loading"></span> Поиск полки...'; btn.disabled=true;
+            const btn=e.target, origText=btn.innerText; btn.innerHTML='<span class="loading"></span> Поиск...'; btn.disabled=true;
             try { const res=await fetch(`${API_BASE}/products/auto-stock`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({product_id:productId, quantity:qty})}); if(!res.ok) throw new Error(await getErrorMessage(res));
             const data=await res.json(); let toastMsg=`${data.message}\n\n`; if(data.results&&data.results.length) { data.results.forEach(r=>{ toastMsg+=`📍 Полка ${r.shelf_id}:\n${r.message}\n`; }); }
             showToast(toastMsg, data.total_placed===data.total_requested?'success':'error'); loadProductDetail(); } catch(err) { showToast(`❌ ${err.message}`, 'error'); } finally { btn.innerHTML=origText; btn.disabled=false; }
@@ -372,7 +538,7 @@
             e.preventDefault(); const shelfId=document.getElementById('withdrawShelfId').value, qty=parseInt(document.getElementById('withdrawQty').value);
             if(!shelfId||!qty) return showToast('Заполните поля', 'error'); const btn=e.target, origText=btn.innerText; btn.innerHTML='<span class="loading"></span>...'; btn.disabled=true;
             try { const res=await fetch(`${API_BASE}/shelves/withdraw`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({shelf_id:shelfId, product_id:productId, quantity:qty})}); if(!res.ok) throw new Error(await getErrorMessage(res));
-            const data=await res.json(); showToast(`✅ ${data.message}. Осталось: ${data.new_quantity} шт.`, 'success'); loadProductDetail(); } catch(err) { showToast(`❌ ${err.message}`, 'error'); } finally { btn.innerHTML=origText; btn.disabled=false; }
+            const data=await res.json(); showToast(`✅ ${data.message}. Осталось: ${data.new_quantity}`, 'success'); loadProductDetail(); } catch(err) { showToast(`❌ ${err.message}`, 'error'); } finally { btn.innerHTML=origText; btn.disabled=false; }
         }
 
         async function addReview(e, productId) {
@@ -396,62 +562,61 @@
             const btn = document.getElementById('btnOptimizeAll');
             const el = document.getElementById('optimizationResult');
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Анализ и перестройка...';
+            btn.innerHTML = '<span class="loading"></span> Анализ...';
             el.style.display = 'block';
-            el.innerHTML = '<span class="loading"></span> Очистка склада и расчет ABC/XYZ...';
+            el.innerHTML = '<span class="loading"></span> Расчет ABC/XYZ...';
 
             try {
                 const res = await fetch(`${API_BASE}/api/optimize/all`, { method: 'POST' });
                 if (!res.ok) throw new Error(await getErrorMessage(res));
                 const data = await res.json();
                 
-                let html = '<h3>📊 Результаты перестройки:</h3>';
+                let html = '<h3>📊 Результаты:</h3>';
                 if (data.length === 0) {
-                    html += '<p>Склад пуст, размещать нечего.</p>';
+                    html += '<p>Склад пуст.</p>';
                 } else {
-                    html += `<table class="results-table"><tr><th>Товар</th><th>Индекс Важности</th><th>Новая Полка</th><th>Статус</th></tr>`;
+                    html += `<table class="results-table"><tr><th>Товар</th><th>Индекс</th><th>Полка</th><th>Статус</th></tr>`;
                     data.forEach(r => { 
                         const score = r.score ? r.score.toFixed(1) : '-';
                         const color = r.score >= 80 ? '#28a745' : (r.score >= 40 ? '#ffc107' : '#dc3545');
                         const pid = r.product_id?.substring(0,8) || 'err';
-                        html += `<tr><td><code>${pid}...</code></td><td style="color:${color};font-weight:bold;">${score}</td><td><code>${r.shelf_id || '-'}</code></td><td>${r.assigned ? '<span class="badge-success">✅ Перемещен</span>' : `<span class="badge-danger">❌ ${r.reason}</span>`}</td></tr>`; 
+                        html += `<tr><td><code>${pid}...</code></td><td style="color:${color};font-weight:bold;">${score}</td><td><code>${r.shelf_id || '-'}</code></td><td>${r.assigned ? '<span class="badge-success">✅ Ок</span>' : `<span class="badge-danger">❌ ${r.reason}</span>`}</td></tr>`; 
                     });
-                    html += `</table><p style="margin-top:10px;font-weight:bold;">Успешно переставлено: ${data.filter(r => r.assigned).length} из ${data.length}</p>`;
+                    html += `</table><p style="margin-top:10px;font-weight:bold;">Успешно: ${data.filter(r => r.assigned).length} / ${data.length}</p>`;
                 }
                 el.innerHTML = html;
-                showToast('✅ Склад успешно перестроен по алгоритму ABC/XYZ!', 'success');
+                showToast('✅ Склад перестроен!', 'success');
                 document.getElementById('tab-map').click();
             } catch(err) {
                 el.innerHTML = `<span style="color:red">❌ ${err.message}</span>`;
                 showToast(`❌ ${err.message}`, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerText = '🚀 Провести полную перестройку склада';
+                btn.innerHTML = '🚀 Перестроить склад';
             }
         }
 
         async function loadWarehouseMap() {
             const container=document.getElementById('warehouseMapContainer'); 
-            container.innerHTML='<div style="text-align:center;width:100%;padding:50px 0;"><span class="loading"></span> Построение карты...</div>';
+            container.innerHTML='<div style="text-align:center;width:100%;padding:50px 0;"><span class="loading"></span> Загрузка карты...</div>';
             try { 
                 const res=await fetch(`${API_BASE}/api/warehouse/map`); 
-                if(!res.ok) throw new Error("Ошибка загрузки карты: " + res.status); 
+                if(!res.ok) throw new Error("Ошибка: " + res.status); 
                 const data=await res.json();
                 
                 let html='<div class="aisle-container">'; 
                 (data.racks || []).forEach(rack=>{ 
-                    html+=`<div class="rack-unit"><div class="rack-label">${escapeHtml(rack.aisle || 'Без имени')}</div><div class="shelves-column">`;
+                    html+=`<div class="rack-unit"><div class="rack-label">${escapeHtml(rack.aisle || 'Ряд')}</div><div class="shelves-column">`;
                     
                     (rack.shelves || []).forEach(shelf=>{ 
-                        // ИСПРАВЛЕНИЕ: Добавлен ID полки для удобного списания + защита от null
                         const usedCap = shelf.used_capacity || 0;
                         
                         if(shelf.product) { 
                             const color=uuidToColor(shelf.product.id); 
-                            const shortName=shelf.product.name.length>10?shelf.product.name.substring(0,10)+'...':shelf.product.name;
-                            html+=`<div class="shelf-box" style="background-color:${color};border-color:${color};"><span class="level-badge">Полка ${shelf.id}</span>${escapeHtml(shortName)} (${shelf.product.quantity})<div class="tooltip"><b>Полка ID: ${shelf.id} (Ур.${shelf.level})</b><br><b>${escapeHtml(shelf.product.name)}</b><br>Кол-во: ${shelf.product.quantity} шт.<br>Занято: <b>${usedCap.toFixed(2)}</b> / ${shelf.max_capacity} м³</div></div>`;
+                            const shortName=shelf.product.name.length>8?shelf.product.name.substring(0,8)+'..':shelf.product.name;
+                            html+=`<div class="shelf-box" style="background-color:${color};border-color:${color};"><span class="level-badge">${shelf.id}</span>${escapeHtml(shortName)} (${shelf.product.quantity})</div>`;
                         } else { 
-                            html+=`<div class="shelf-box empty"><span class="level-badge" style="color:#adb5bd;">Полка ${shelf.id}</span>Пусто<div class="tooltip" style="color:#ccc;">Полка ID: ${shelf.id} (Ур.${shelf.level})<br>Занято: <b>${usedCap.toFixed(2)}</b> / ${shelf.max_capacity} м³<br><br>Свободно: ${(shelf.max_capacity - usedCap).toFixed(2)} м³</div></div>`; 
+                            html+=`<div class="shelf-box empty"><span class="level-badge" style="color:#adb5bd;">${shelf.id}</span>Пусто</div>`; 
                         } 
                     });
                     html+=`</div></div>`; 
@@ -459,13 +624,17 @@
                 html+='</div>'; 
                 container.innerHTML=html;
             } catch(e) { 
-                console.error("Ошибка рендера карты:", e);
-                container.innerHTML=`<p style="color:#dc3545;text-align:center;padding:50px 0;">Ошибка рендера: ${escapeHtml(e.message)}</p>`; 
+                console.error(e);
+                container.innerHTML=`<p style="color:#dc3545;text-align:center;padding:50px 0;">Ошибка: ${escapeHtml(e.message)}</p>`; 
             }
         }
 
         function showToast(msg, type='info') { const t=document.createElement('div'); t.className=`toast ${type}`; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{ t.style.animation='slideIn 0.3s reverse'; setTimeout(()=>t.remove(), 300); }, 4000); }
-        document.addEventListener('DOMContentLoaded', checkPing);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkPing();
+            setupScrollSpy(); // Запускаем следилку за скроллом
+        });
     </script>
 </body>
 </html>
