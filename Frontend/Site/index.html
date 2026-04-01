@@ -256,7 +256,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost/warehouse';
+        const API_BASE = 'https://warehouse-back.onrender.com';
         let currentDetailView = 'card', currentProductData = null, currentVisibilityFilter = 'all', currentListView = 'cards', currentProductsData = null, currentRating = 5;
 
         function uuidToColor(uuid) { let hash=0; for(let i=0;i<uuid.length;i++) { hash=uuid.charCodeAt(i)+((hash<<5)-hash); hash=hash&hash; } return `hsl(${Math.abs(hash%360)}, 75%, 45%)`; }
@@ -396,7 +396,7 @@
             const btn = document.getElementById('btnOptimizeAll');
             const el = document.getElementById('optimizationResult');
             btn.disabled = true;
-            btn.innerText = '<span class="loading"></span> Анализ и перестройка...';
+            btn.innerHTML = '<span class="loading"></span> Анализ и перестройка...';
             el.style.display = 'block';
             el.innerHTML = '<span class="loading"></span> Очистка склада и расчет ABC/XYZ...';
 
