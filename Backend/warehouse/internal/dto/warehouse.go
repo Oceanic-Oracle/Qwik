@@ -11,11 +11,12 @@ type RackState struct {
 }
 
 type ShelfState struct {
-    ID           string       `json:"id"`
-    Level        int          `json:"level"`
-    MaxCapacity  float64      `json:"max_capacity"`
-    UsedCapacity float64      `json:"used_capacity"`
-    Product      *ProductCell `json:"product,omitempty"`
+    ID           string         `json:"id"`
+    Level        int            `json:"level"`
+    Section      int            `json:"section"`
+    MaxCapacity  float64        `json:"max_capacity"`
+    UsedCapacity float64        `json:"used_capacity"`
+    Products     []*ProductCell `json:"products,omitempty"`
 }
 
 type ProductCell struct {

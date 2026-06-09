@@ -1,6 +1,7 @@
 package server
 
 import (
+    "context"
     "log/slog"
     "net/http"
     "warehouse/internal/config"
@@ -32,16 +33,21 @@ func corsMiddleware(next http.Handler) http.Handler {
     })
 }
 
+type loggedKey struct{}
+
 func loggingMiddleware(log *slog.Logger) func(next http.Handler) http.Handler {
     return func(next http.Handler) http.Handler {
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            log.Info("Incoming request",
-                slog.String("method", r.Method),
-                slog.String("path", r.URL.Path),
-                slog.String("remote_addr", r.RemoteAddr),
-                slog.String("user_agent", r.UserAgent()),
-                slog.Bool("auth", r.Header.Get("Authorization") != ""),
-            )
+            if r.Context().Value(loggedKey{}) == nil {
+                log.Info("Incoming request",
+                    slog.String("method", r.Method),
+                    slog.String("path", r.URL.Path),
+                    slog.String("remote_addr", r.RemoteAddr),
+                    slog.String("user_agent", r.UserAgent()),
+                    slog.Bool("auth", r.Header.Get("Authorization") != ""),
+                )
+                r = r.WithContext(context.WithValue(r.Context(), loggedKey{}, true))
+            }
             next.ServeHTTP(w, r)
         })
     }

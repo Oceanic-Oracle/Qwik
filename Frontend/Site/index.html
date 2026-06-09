@@ -20,7 +20,7 @@
         .ping-badge { display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
         .ping-badge.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .ping-badge.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px; align-items: start; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(500px, 100%), 1fr)); gap: 30px; align-items: start; }
         .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
         .card:hover { transform: translateY(-5px); }
         .card h2 { color: #333; margin-bottom: 20px; font-size: 1.5em; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
@@ -148,6 +148,41 @@
         .shelf-box .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
         .shelf-box:hover .tooltip { visibility: visible; }
         .shelf-box .level-badge { position: absolute; top: 2px; left: 4px; font-size: 0.7em; opacity: 0.9; }
+        .level-row { display: flex; flex-direction: row; gap: 4px; align-items: stretch; }
+        .level-label { font-size: 0.65em; color: #6c757d; writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); padding: 2px; min-width: 14px; text-align: center; align-self: center; }
+
+        /* ── Mobile ─────────────────────────────────────────── */
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            header { padding: 14px 16px; }
+            header h1 { font-size: 1.3em; }
+            .dashboard { grid-template-columns: 1fr; gap: 16px; }
+            .card { padding: 16px; }
+            .card h2 { font-size: 1.2em; }
+            .product-detail-price { font-size: 1.8em; }
+            .product-detail-title { font-size: 1.5em; }
+            .products-grid { grid-template-columns: 1fr; }
+            .button-group { flex-direction: column; }
+            .filter-panel { flex-wrap: wrap; gap: 6px; }
+            .filter-btn { font-size: 0.85em; padding: 6px 8px; }
+            .tabs { gap: 6px; }
+            .tab { padding: 8px 12px; font-size: 0.9em; }
+            .list-view-toggle { gap: 6px; }
+            .aisle-container { gap: 16px; }
+            .shelf-box { width: 110px; height: 48px; font-size: 0.65em; }
+            .rack-label { font-size: 0.85em; }
+            .stock-row { flex-direction: column; }
+            .manual-withdraw-form.active { flex-direction: column; }
+            .size-input-group { grid-template-columns: 1fr 1fr; }
+            .toast { left: 10px; right: 10px; max-width: none; }
+            .info-tooltip-text { width: 260px; }
+            .results-table { font-size: 0.75em; }
+            .results-table th, .results-table td { padding: 6px 4px; }
+        }
+        @media (max-width: 400px) {
+            .shelf-box { width: 80px; height: 42px; font-size: 0.6em; }
+            .aisle-container { gap: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -164,7 +199,7 @@
                 <div class="tab-container">
                     <div class="tabs">
                         <div class="tab active" onclick="switchTab('products-list')">Список</div>
-                        <div class="tab" onclick="switchTab('products-create')">Создать</div>
+                        <div class="tab" onclick="switchTab('products-create')">+ Новый товар</div>
                         <div class="tab" onclick="switchTab('products-detail')">Детали</div>
                     </div>
                     <div id="products-list" class="tab-content active">
@@ -262,7 +297,9 @@
     </div>
 
     <script>
-        const API_BASE = 'https://warehouse-back.onrender.com';
+        const REMOTE_URL = 'https://warehouse-back.onrender.com';
+        const LOCAL_URL  = 'http://localhost:8080';
+        let API_BASE = REMOTE_URL;
         let currentDetailView = 'card', currentProductData = null, currentVisibilityFilter = 'all', currentListView = 'cards', currentProductsData = null, currentRating = 5;
 
         function uuidToColor(uuid) { let hash=0; for(let i=0;i<uuid.length;i++) { hash=uuid.charCodeAt(i)+((hash<<5)-hash); hash=hash&hash; } return `hsl(${Math.abs(hash%360)}, 75%, 45%)`; }
@@ -276,10 +313,27 @@
         function unhoverStar() { document.querySelectorAll('.rating-row .star').forEach(s=>s.classList.remove('hovered')); }
         function setRating(r) { currentRating=r; document.querySelectorAll('.rating-row .star').forEach((s,i)=>s.classList.toggle('selected',i<r)); document.getElementById('ratingValue').textContent=`${r}/5`; }
 
+        async function tryPing(url) {
+            const res = await fetch(`${url}/ping`, { signal: AbortSignal.timeout(5000) });
+            if (!res.ok) throw new Error('not ok');
+            return url;
+        }
+
         async function checkPing() {
-            const el=document.getElementById('pingStatus'); el.innerHTML='<span class="loading"></span>';
-            try { const res=await fetch(`${API_BASE}/ping`); el.className='ping-badge success'; el.innerHTML='✅ Сервер доступен'; setVisibilityFilter('all'); setTimeout(()=>loadProducts(), 500); }
-            catch(e) { el.className='ping-badge error'; el.innerHTML='❌ Сервер недоступен'; }
+            const el = document.getElementById('pingStatus');
+            el.innerHTML = '<span class="loading"></span> Подключение...';
+            try {
+                const url = await Promise.any([tryPing(REMOTE_URL), tryPing(LOCAL_URL)]);
+                API_BASE = url;
+                const label = url === LOCAL_URL ? '🖥️ локальный' : '☁️ удалённый';
+                el.className = 'ping-badge success';
+                el.innerHTML = `✅ Подключено (${label})`;
+                setVisibilityFilter('all');
+                setTimeout(() => loadProducts(), 500);
+            } catch(e) {
+                el.className = 'ping-badge error';
+                el.innerHTML = '❌ Сервер недоступен (remote + local)';
+            }
         }
 
         function switchTab(tabId) {
@@ -363,15 +417,23 @@
         function renderProductDetailCard(p) {
             const revs=p.reviews&&p.reviews.length?p.reviews.map(r=>`<div class="review-card"><div class="review-header"><span class="review-author">👤 ${escapeHtml(r.login||'Аноним')}</span><span class="review-grade"><span class="rating-stars">${renderStars(r.grade)}</span> ${r.grade}.0</span></div><div class="review-date">📅 ${formatDate(r.created_at)}</div><div class="review-text">💬 ${escapeHtml(r.description)}</div></div>`).join(''):'<p style="color:#666;text-align:center;">Нет отзывов</p>';
             let dims=''; if(p.width||p.height||p.depth||p.weight||p.volume) { dims=`<div class="dimensions-section">${p.width?`<div class="dimension-item"><div class="dimension-label">📏 Ширина</div><div class="dimension-value">${p.width} см</div></div>`:''}${p.height?`<div class="dimension-item"><div class="dimension-label">📐 Высота</div><div class="dimension-value">${p.height} см</div></div>`:''}${p.depth?`<div class="dimension-item"><div class="dimension-label">📏 Глубина</div><div class="dimension-value">${p.depth} см</div></div>`:''}${p.weight?`<div class="dimension-item"><div class="dimension-label">⚖️ Вес</div><div class="dimension-value">${p.weight} кг</div></div>`:''}${p.volume?`<div class="dimension-item"><div class="dimension-label">📦 Объем</div><div class="dimension-value">${p.volume} м³</div></div>`:''}</div>`; }
-            document.getElementById('productDetailCard').innerHTML=`<div class="product-detail-image-container"><svg class="product-detail-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div><div class="product-detail-info"><h1 class="product-detail-title">${escapeHtml(p.name)}</h1><div class="product-detail-price">💰 ${p.price.toLocaleString()} ₽</div><div class="product-detail-meta"><div class="meta-item"><span>🆔</span><span><code>${p.id}</code></span></div><div class="meta-item"><span>⭐</span><span>${p.avg?p.avg.toFixed(1):'0.0'}</span></div><div class="meta-item" style="color:#28a745;font-weight:bold;"><span>📦</span><span>Склад: ${p.stock_quantity||0} шт.</span></div><div class="meta-item"><span>👁️</span><span>${p.visibility?'Видимый':'Скрытый'}</span></div><div class="meta-item"><span>📅</span><span>${formatDate(p.created_at)}</span></div></div>${dims}<div class="product-detail-description"><strong>📄 Описание:</strong><br>${escapeHtml(p.description||'Нет описания')}</div><div class="stock-section"><h3>📦 Размещение на складе</h3><div class="stock-row"><div class="form-group"><label style="font-size:0.9em">Сколько штук разместить?</label><input type="number" id="stockQuantity" value="1" min="1"></div><div style="flex:1.5;"><button class="btn-success" onclick="handleAutoStock(event, '${p.id}')">🤖 Разместить автоматически</button></div></div><div class="manual-withdraw-link" onclick="document.getElementById('manualWithdrawForm').classList.toggle('active')">Списать товар с конкретной полки вручную</div><div id="manualWithdrawForm" class="manual-withdraw-form"><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">ID Полки</label><input type="number" id="withdrawShelfId" placeholder="1" min="1"></div><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">Кол-во</label><input type="number" id="withdrawQty" value="1" min="1"></div><button class="btn-danger btn-small" onclick="handleManualWithdraw(event, '${p.id}')">➖ Списать</button></div></div><div class="review-form"><h3>✍️ Добавить отзыв</h3><form onsubmit="addReview(event, '${p.id}')"><div class="form-group"><label>Текст отзыва *</label><textarea id="reviewDescription" rows="3" required></textarea></div><div class="form-group"><label>Оценка *</label>${renderStarRatingCompact(5)}</div><div class="form-group"><label>JWT токен (необязательно)</label><input type="text" id="reviewJwt" class="jwt-field" placeholder="eyJhbG..."></div><button type="submit">📝 Отправить отзыв</button></form></div><div class="reviews-section"><h3 class="reviews-title">📊 Отзывы</h3>${revs}</div></div>`;
+            document.getElementById('productDetailCard').innerHTML=`<div class="product-detail-image-container"><svg class="product-detail-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="2.5"/><path d="M21 15L16 10L5 21"/></svg></div><div class="product-detail-info"><h1 class="product-detail-title">${escapeHtml(p.name)}</h1><div class="product-detail-price">💰 ${p.price.toLocaleString()} ₽</div><div class="product-detail-meta"><div class="meta-item"><span>🆔</span><span><code>${p.id}</code></span></div><div class="meta-item"><span>⭐</span><span>${p.avg?p.avg.toFixed(1):'0.0'}</span></div><div class="meta-item" style="color:#28a745;font-weight:bold;"><span>📦</span><span>Склад: ${p.stock_quantity||0} шт.</span></div><div class="meta-item"><span>👁️</span><span>${p.visibility?'Видимый':'Скрытый'}</span></div><div class="meta-item"><span>📅</span><span>${formatDate(p.created_at)}</span></div></div>${dims}<div class="product-detail-description"><strong>📄 Описание:</strong><br>${escapeHtml(p.description||'Нет описания')}</div><div class="stock-section"><h3>📦 Склад</h3><p style="color:#4a5bc7;font-size:0.85em;margin-bottom:12px;">Добавьте единицы товара на склад, затем запустите алгоритм ABC/XYZ — он расставит всё по оптимальным полкам.</p><div class="stock-row"><div class="form-group"><label style="font-size:0.9em">Количество штук</label><input type="number" id="stockQuantity" value="1" min="1"></div><div style="flex:1.5;"><button class="btn-success" onclick="handleAddStock(event, '${p.id}')">➕ Добавить на склад</button></div></div><div class="manual-withdraw-link" onclick="document.getElementById('manualWithdrawForm').classList.toggle('active')">Списать товар с конкретной полки вручную</div><div id="manualWithdrawForm" class="manual-withdraw-form"><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">ID Полки</label><input type="number" id="withdrawShelfId" placeholder="1" min="1"></div><div class="form-group" style="flex:1;min-width:100px;"><label style="font-size:0.85em">Кол-во</label><input type="number" id="withdrawQty" value="1" min="1"></div><button class="btn-danger btn-small" onclick="handleManualWithdraw(event, '${p.id}')">➖ Списать</button></div></div><div class="review-form"><h3>✍️ Добавить отзыв</h3><form onsubmit="addReview(event, '${p.id}')"><div class="form-group"><label>Текст отзыва *</label><textarea id="reviewDescription" rows="3" required></textarea></div><div class="form-group"><label>Оценка *</label>${renderStarRatingCompact(5)}</div><div class="form-group"><label>JWT токен (необязательно)</label><input type="text" id="reviewJwt" class="jwt-field" placeholder="eyJhbG..."></div><button type="submit">📝 Отправить отзыв</button></form></div><div class="reviews-section"><h3 class="reviews-title">📊 Отзывы</h3>${revs}</div></div>`;
         }
 
-        async function handleAutoStock(e, productId) {
-            e.preventDefault(); const qty=parseInt(document.getElementById('stockQuantity').value); if(!qty) return showToast('Укажите количество', 'error');
-            const btn=e.target, origText=btn.innerText; btn.innerHTML='<span class="loading"></span> Поиск полки...'; btn.disabled=true;
-            try { const res=await fetch(`${API_BASE}/products/auto-stock`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({product_id:productId, quantity:qty})}); if(!res.ok) throw new Error(await getErrorMessage(res));
-            const data=await res.json(); let toastMsg=`${data.message}\n\n`; if(data.results&&data.results.length) { data.results.forEach(r=>{ toastMsg+=`📍 Полка ${r.shelf_id}:\n${r.message}\n`; }); }
-            showToast(toastMsg, data.total_placed===data.total_requested?'success':'error'); loadProductDetail(); } catch(err) { showToast(`❌ ${err.message}`, 'error'); } finally { btn.innerHTML=origText; btn.disabled=false; }
+        async function handleAddStock(e, productId) {
+            e.preventDefault();
+            const qty = parseInt(document.getElementById('stockQuantity').value);
+            if (!qty || qty <= 0) return showToast('Укажите количество', 'error');
+            const btn = e.target, orig = btn.innerText;
+            btn.innerHTML = '<span class="loading"></span>...'; btn.disabled = true;
+            try {
+                const res = await fetch(`${API_BASE}/products/auto-stock`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({product_id: productId, quantity: qty}) });
+                if (!res.ok) throw new Error(await getErrorMessage(res));
+                const data = await res.json();
+                showToast(`✅ ${data.total_placed} шт. добавлено на склад. Запустите ABC/XYZ для оптимального размещения.`, 'success');
+                loadProductDetail();
+            } catch(err) { showToast(`❌ ${err.message}`, 'error'); }
+            finally { btn.innerHTML = orig; btn.disabled = false; }
         }
 
         async function handleManualWithdraw(e, productId) {
@@ -445,22 +507,40 @@
                 const data=await res.json();
                 
                 let html='<div class="aisle-container">'; 
-                (data.racks || []).forEach(rack=>{ 
-                    html+=`<div class="rack-unit"><div class="rack-label">${escapeHtml(rack.aisle || 'Без имени')}</div><div class="shelves-column">`;
-                    
-                    (rack.shelves || []).forEach(shelf=>{ 
-                        // ИСПРАВЛЕНИЕ: Добавлен ID полки для удобного списания + защита от null
-                        const usedCap = shelf.used_capacity || 0;
-                        
-                        if(shelf.product) { 
-                            const color=uuidToColor(shelf.product.id); 
-                            const shortName=shelf.product.name.length>10?shelf.product.name.substring(0,10)+'...':shelf.product.name;
-                            html+=`<div class="shelf-box" style="background-color:${color};border-color:${color};"><span class="level-badge">Полка ${shelf.id}</span>${escapeHtml(shortName)} (${shelf.product.quantity})<div class="tooltip"><b>Полка ID: ${shelf.id} (Ур.${shelf.level})</b><br><b>${escapeHtml(shelf.product.name)}</b><br>Кол-во: ${shelf.product.quantity} шт.<br>Занято: <b>${usedCap.toFixed(2)}</b> / ${shelf.max_capacity} м³</div></div>`;
-                        } else { 
-                            html+=`<div class="shelf-box empty"><span class="level-badge" style="color:#adb5bd;">Полка ${shelf.id}</span>Пусто<div class="tooltip" style="color:#ccc;">Полка ID: ${shelf.id} (Ур.${shelf.level})<br>Занято: <b>${usedCap.toFixed(2)}</b> / ${shelf.max_capacity} м³<br><br>Свободно: ${(shelf.max_capacity - usedCap).toFixed(2)} м³</div></div>`; 
-                        } 
+                (data.racks || []).forEach(rack=>{
+                    // Группируем полки по уровню
+                    const byLevel = {};
+                    (rack.shelves || []).forEach(shelf=>{
+                        const lvl = shelf.level ?? 1;
+                        if (!byLevel[lvl]) byLevel[lvl] = [];
+                        byLevel[lvl].push(shelf);
                     });
-                    html+=`</div></div>`; 
+                    const levels = Object.keys(byLevel).map(Number).sort((a,b)=>b-a); // сверху вниз
+
+                    html+=`<div class="rack-unit"><div class="rack-label">${escapeHtml(rack.aisle || 'Без имени')}</div><div class="shelves-column">`;
+
+                    levels.forEach(lvl=>{
+                        html+=`<div class="level-row"><span class="level-label">Ур.${lvl}</span>`;
+                        byLevel[lvl].forEach(shelf=>{
+                            const usedCap = shelf.used_capacity || 0;
+                            const products = shelf.products || [];
+                            const secLabel = byLevel[lvl].length > 1 ? ` С${shelf.section}` : '';
+
+                            if(products.length > 0) {
+                                const mainColor = uuidToColor(products[0].id);
+                                const label = products.length === 1
+                                    ? (products[0].name.length > 9 ? products[0].name.substring(0,9)+'…' : products[0].name) + ` (${products[0].quantity})`
+                                    : `${products.length} вида`;
+                                const tooltipRows = products.map(pr=>`• <b>${escapeHtml(pr.name)}</b>: ${pr.quantity} шт.`).join('<br>');
+                                html+=`<div class="shelf-box" style="background-color:${mainColor};border-color:${mainColor};"><span class="level-badge">${shelf.id}${secLabel}</span>${escapeHtml(label)}<div class="tooltip"><b>Полка ${shelf.id}${secLabel} (Ур.${lvl})</b><br>${tooltipRows}<br><br>Занято: <b>${usedCap.toFixed(2)}</b> / ${shelf.max_capacity} м³</div></div>`;
+                            } else {
+                                html+=`<div class="shelf-box empty"><span class="level-badge" style="color:#adb5bd;">${shelf.id}${secLabel}</span>Пусто<div class="tooltip" style="color:#ccc;">Полка ${shelf.id}${secLabel} (Ур.${lvl})<br>Занято: <b>${usedCap.toFixed(2)}</b> / ${shelf.max_capacity} м³<br>Свободно: ${(shelf.max_capacity-usedCap).toFixed(2)} м³</div></div>`;
+                            }
+                        });
+                        html+=`</div>`;
+                    });
+
+                    html+=`</div></div>`;
                 }); 
                 html+='</div>'; 
                 container.innerHTML=html;

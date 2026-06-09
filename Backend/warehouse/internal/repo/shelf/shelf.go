@@ -53,6 +53,7 @@ type ShelfEntity struct {
     ID           string
     RackID       string
     Level        int
+    Section      int
     Priority     float64
     MaxCapacity  float64
     UsedCapacity float64
@@ -64,16 +65,16 @@ func (r *ShelfRepo) GetAvailableShelves(
     productID string,
 ) ([]*ShelfEntity, error) {
     query := `
-        SELECT 
-            s.id::text, s.rack_id::text, s.level, s.priority, 
+        SELECT
+            s.id::text, s.rack_id::text, s.level, s.section, s.priority,
             s.max_capacity, s.used_capacity
         FROM shelf s
         WHERE (s.max_capacity - s.used_capacity) >= $1
           AND NOT EXISTS (
-              SELECT 1 FROM shelf_product sp 
+              SELECT 1 FROM shelf_product sp
               WHERE sp.shelf_id = s.id AND sp.product_id::text != $2
           )
-        ORDER BY s.priority DESC, s.level ASC
+        ORDER BY s.priority DESC, s.level ASC, s.section ASC
         LIMIT 100
     `
 
@@ -90,7 +91,7 @@ func (r *ShelfRepo) GetAvailableShelves(
         for rows.Next() {
             var shelf ShelfEntity
             err := rows.Scan(
-                &shelf.ID, &shelf.RackID, &shelf.Level, &shelf.Priority,
+                &shelf.ID, &shelf.RackID, &shelf.Level, &shelf.Section, &shelf.Priority,
                 &shelf.MaxCapacity, &shelf.UsedCapacity,
             )
             if err != nil {
@@ -109,12 +110,12 @@ func (r *ShelfRepo) GetAvailableShelves(
 // Идеально для алгоритма ABC/XYZ, так как позволяет дробить партию и миксовать товары на полках.
 func (r *ShelfRepo) GetShelvesForOptimization(ctx context.Context, requiredCapacity float64) ([]*ShelfEntity, error) {
     query := `
-        SELECT 
-            s.id::text, s.rack_id::text, s.level, s.priority, 
+        SELECT
+            s.id::text, s.rack_id::text, s.level, s.section, s.priority,
             s.max_capacity, s.used_capacity
         FROM shelf s
         WHERE (s.max_capacity - s.used_capacity) >= $1
-        ORDER BY s.priority DESC, s.level ASC
+        ORDER BY s.priority DESC, s.level ASC, s.section ASC
         LIMIT 100
     `
 
@@ -131,7 +132,7 @@ func (r *ShelfRepo) GetShelvesForOptimization(ctx context.Context, requiredCapac
         for rows.Next() {
             var shelf ShelfEntity
             err := rows.Scan(
-                &shelf.ID, &shelf.RackID, &shelf.Level, &shelf.Priority,
+                &shelf.ID, &shelf.RackID, &shelf.Level, &shelf.Section, &shelf.Priority,
                 &shelf.MaxCapacity, &shelf.UsedCapacity,
             )
             if err != nil {
@@ -423,13 +424,14 @@ func (r *ShelfRepo) WithdrawStock(ctx context.Context, shelfID, productID string
         return nil, err
     }
 
-    var newUsedCap float64
-    tx.QueryRow(ctx, "SELECT used_capacity FROM shelf WHERE id = $1", shelfID).Scan(&newUsedCap)
-
     if err = tx.Commit(ctx); err != nil {
         return nil, err
     }
     tx = nil
+
+    var newUsedCap float64
+    writeConn, _ := r.writeConn(productID)
+    _ = writeConn.QueryRow(ctx, "SELECT used_capacity FROM shelf WHERE id = $1", shelfID).Scan(&newUsedCap)
 
     return &dto.StockResponse{
         ShelfID:      shelfID,
@@ -465,7 +467,7 @@ func (r *ShelfRepo) GetWarehouseMap(ctx context.Context) (*dto.WarehouseMap, err
         racks = append(racks, rack)
     }
 
-    shelfRows, err := conn.Query(ctx, `SELECT id::text, rack_id::text, level, max_capacity, used_capacity FROM shelf ORDER BY rack_id, priority DESC, level ASC`)
+    shelfRows, err := conn.Query(ctx, `SELECT id::text, rack_id::text, level, section, max_capacity, used_capacity FROM shelf ORDER BY rack_id, level ASC, section ASC`)
     if err != nil {
         return nil, fmt.Errorf("ошибка получения полок: %w", err)
     }
@@ -475,7 +477,7 @@ func (r *ShelfRepo) GetWarehouseMap(ctx context.Context) (*dto.WarehouseMap, err
     for shelfRows.Next() {
         shelf := &dto.ShelfState{}
         var rackID string
-        if err := shelfRows.Scan(&shelf.ID, &rackID, &shelf.Level, &shelf.MaxCapacity, &shelf.UsedCapacity); err != nil {
+        if err := shelfRows.Scan(&shelf.ID, &rackID, &shelf.Level, &shelf.Section, &shelf.MaxCapacity, &shelf.UsedCapacity); err != nil {
             return nil, err
         }
         shelvesMap[shelf.ID] = shelf
@@ -514,11 +516,11 @@ func (r *ShelfRepo) GetWarehouseMap(ctx context.Context) (*dto.WarehouseMap, err
 
     for _, p := range placements {
         if shelf, ok := shelvesMap[p.ShelfID]; ok {
-            shelf.Product = &dto.ProductCell{
+            shelf.Products = append(shelf.Products, &dto.ProductCell{
                 ID:       p.ProductID,
                 Name:     p.Name,
                 Quantity: p.Quantity,
-            }
+            })
         }
     }
 

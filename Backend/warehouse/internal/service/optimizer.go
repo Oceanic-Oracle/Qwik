@@ -134,9 +134,9 @@ func (s *OptimizationService) calculateSlottingScore(p *domain.Product) float64 
 
     xyzScore := 0.0
     switch p.XYZClass {
-    case domain.ClassZ: xyzScore = 100.0
+    case domain.ClassX: xyzScore = 100.0
     case domain.ClassY: xyzScore = 50.0
-    case domain.ClassX: xyzScore = 0.0
+    case domain.ClassZ: xyzScore = 0.0
     }
 
     return (s.cfg.WeightPriority * abcScore) + (s.cfg.WeightLevel * xyzScore)
@@ -175,16 +175,15 @@ func (s *OptimizationService) allocateItemsSequentially(
             Assigned:  false,
         }
 
-        volume, err := s.shelfRepo.GetProductVolume(ctx, sp.prod.ID)
-        if err != nil || volume == 0 {
-            s.log.Warn("нельзя разместить товар без объема", "product_id", sp.prod.ID, "error", err)
+        volume := sp.prod.AllocatedCapacity
+        if volume == 0 {
+            s.log.Warn("нельзя разместить товар без объема", "product_id", sp.prod.ID)
             result.Reason = "product_has_no_volume_or_not_found"
             results[sp.origIdx] = result
             continue
         }
 
-        // ИСПРАВЛЕНИЕ: Ищем полки с минимальным порогом (чтобы влезла хотя бы 1 шт)
-        minReqCap := volume 
+        minReqCap := volume
         shelves, err := s.shelfRepo.GetShelvesForOptimization(ctx, minReqCap)
         if err != nil || len(shelves) == 0 {
             result.Reason = "no_shelves_found"
