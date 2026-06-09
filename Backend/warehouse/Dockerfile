@@ -17,8 +17,6 @@ FROM alpine:3.21
 
 COPY --from=build /app/bin /app/bin
 
-COPY .env .env
-
 EXPOSE 8080
 
 ENTRYPOINT ["/app/bin"]

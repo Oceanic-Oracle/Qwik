@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -57,8 +58,14 @@ type OptimizerConfig struct {
 
 func MustLoad() *Config {
 	var cfg Config
-	if err := cleanenv.ReadConfig(PATH, &cfg); err != nil {
-		log.Fatalf("не удалось прочитать конфиг: %s", err)
+	if _, err := os.Stat(PATH); err == nil {
+		if err := cleanenv.ReadConfig(PATH, &cfg); err != nil {
+			log.Fatalf("не удалось прочитать конфиг из файла: %s", err)
+		}
+	} else {
+		if err := cleanenv.ReadEnv(&cfg); err != nil {
+			log.Fatalf("не удалось прочитать конфиг из env: %s", err)
+		}
 	}
 	return &cfg
 }
